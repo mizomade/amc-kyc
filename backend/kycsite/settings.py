@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'kyc',
     'api',
-    'core_app',
     'core',
     'certificates',
     

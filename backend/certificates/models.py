@@ -1,4 +1,6 @@
 from django.db import models
+from core.models import Veng
+from kyc.models import Person
 
 # Create your models here.
 class CertificateType(models.Model):
@@ -18,10 +20,10 @@ class Certificate(models.Model):
     """
     Stores each issued certificate.
     """
-    person = models.ForeignKey('Person', on_delete=models.CASCADE, related_name='certificates')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='certificates')
     certificate_type = models.ForeignKey(CertificateType, on_delete=models.CASCADE, related_name='certificates')
 
-    citizen_locality = models.ForeignKey('Veng', null=True, blank=True, on_delete=models.SET_NULL)
+    citizen_locality = models.ForeignKey(Veng, null=True, blank=True, on_delete=models.SET_NULL)
     details = models.TextField(null=True, blank=True)  # Rich text body for the certificate’s content
 
     application_date = models.DateField(auto_now_add=True)
