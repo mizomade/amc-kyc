@@ -1,51 +1,17 @@
 <template>
   <div>
-    <header>
-      <nav>
-        <ul>
-          <li><NuxtLink to="/">Home</NuxtLink></li>
-          <li><NuxtLink to="/local_council">Local Council Dashboard</NuxtLink></li>
-        </ul>
-      </nav>
-    </header>
-    <main>
-      <h1>Local Council Layout</h1>
+    <Navbar />
+    <main class="pt-16">
       <slot />
     </main>
-    <footer>
-      <p>&copy; 2023 Local Council Panel</p>
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-8">
+      <div class="container mx-auto px-6 text-center">
+        <p>&copy; 2025 AMC Citizen Management System. All rights reserved.</p>
+      </div>
     </footer>
   </div>
 </template>
 
 <script setup>
-definePageMeta({
-  layout: 'local_council',
-  middleware: 'auth',
-  roles: ['local_council'],
-});
-
+import Navbar from '~/components/navbar.vue';
 </script>
-<style scoped>
-header {
-  background-color: #e0e0ff;
-  padding: 1rem;
-}
-
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 1rem;
-}
-
-main {
-  padding: 1rem;
-}
-
-footer {
-  background-color: #e0e0ff;
-  padding: 1rem;
-  text-align: center;
-}
-</style>

@@ -8,6 +8,7 @@ from .occupations import router as occupations_router
 from .attachments import router as attachments_router
 from .certificates import router as certificates_router
 from .family_tree import router as family_tree
+from .user import router as user_router
 
 
 api = NinjaAPI()
@@ -21,6 +22,7 @@ api.add_router("/occupations/", occupations_router)
 api.add_router("/attachments/", attachments_router)
 api.add_router("/certificates/", certificates_router)
 api.add_router("/family-tree/", family_tree)
+api.add_router("/user/", user_router)
 
 
 

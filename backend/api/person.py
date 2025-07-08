@@ -74,3 +74,7 @@ def delete_person(request, person_id: int):
         return {"message": "Person deleted successfully"}
     except Person.DoesNotExist:
         raise Http404("Person not found")
+
+
+
+

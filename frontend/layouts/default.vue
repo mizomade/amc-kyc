@@ -1,45 +1,17 @@
 <template>
   <div>
-    <header>
-      <nav>
-        <ul>
-          <li><NuxtLink to="/">Citizen Management System</NuxtLink></li>
-          <!-- <li><NuxtLink to="/login">Login</NuxtLink></li>
-          <li><NuxtLink to="/admin">Admin Dashboard (Example)</NuxtLink></li>
-          <li><NuxtLink to="/local_council">Local Council Dashboard (Example)</NuxtLink></li>
-          <li><NuxtLink to="/operator">Operator Dashboard (Example)</NuxtLink></li> -->
-        </ul>
-      </nav>
-    </header>
-    <main>
+    <Navbar />
+    <main class="pt-16">
       <slot />
     </main>
-    <footer>
-      <p>&copy; 2023 My App</p>
+    <footer class="bg-gray-800 text-gray-300 py-8 mt-8">
+      <div class="container mx-auto px-6 text-center">
+        <p>&copy; 2025 AMC Citizen Management System. All rights reserved.</p>
+      </div>
     </footer>
   </div>
 </template>
 
-<style scoped>
-header {
-  background-color: #f0f0f0;
-  padding: 1rem;
-}
-
-nav ul {
-  list-style: none;
-  padding: 0;
-  display: flex;
-  gap: 1rem;
-}
-
-/* main {
-  padding: 1rem;
-} */
-
-footer {
-  background-color: #f0f0f0;
-  padding: 1rem;
-  text-align: center;
-}
-</style>
+<script setup>
+import Navbar from '~/components/navbar.vue';
+</script>

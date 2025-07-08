@@ -1,7 +1,9 @@
 <template>
   <div class="min-h-screen bg-gray-50 font-sans text-gray-800">
+    <!-- Navigation -->
+
     <!-- Hero Section -->
-    <section class="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white py-20 md:py-32 overflow-hidden">
+    <section class="relative bg-gradient-to-r from-blue-600 to-purple-700 text-white pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
       <div class="absolute inset-0 z-0 opacity-10">
         <svg class="w-full h-full" viewBox="0 0 1440 320" preserveAspectRatio="none" fill="currentColor">
           <path d="M0,160L48,176C96,192,192,224,288,208C384,192,480,128,576,106.7C672,85,768,107,864,133.3C960,160,1056,192,1152,192C1248,192,1344,160,1392,144L1440,128L1440,0L1392,0C1344,0,1248,0,1152,0C1056,0,960,0,864,0C768,0,672,0,576,0C480,0,384,0,288,0C192,0,96,0,48,0L0,0Z"></path>
@@ -100,22 +102,19 @@
   </div>
 </template>
 
-<script>
-export default {
-  name: 'LandingPage',
-  head() {
-    return {
-      title: 'AMC Citizen Management System',
-      meta: [
-        {
-          hid: 'description',
-          name: 'description',
-          content: 'Secure and efficient Citizen Management System for Local Councils and AMC Wards.'
-        }
-      ]
-    }
+<script setup>
+import { useAuthStore } from '~/stores/auth';
+import { useRouter } from 'vue-router';
+
+definePageMeta({
+  // middleware: 'guest',
+});
+const router = useRouter();
+const authStore = useAuthStore();
+
+if (authStore.isAuthenticated) {
+    router.push('/admin');
   }
-}
 </script>
 
 <style scoped>
