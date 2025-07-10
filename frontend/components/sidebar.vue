@@ -64,9 +64,12 @@
     { label: 'Dashboard', path: '/admin/', icon: 'material-symbols:dashboard' },
     { label: 'Citizen List', path: '/admin/citizenlist', icon: 'mdi:account-group' },
     { label: 'Reports', path: '/admin/reports', icon: 'mdi:file-chart' },
-    { label: 'Settings', path: '/admin/settings', icon: 'mdi:cog' },
+    { label: 'Family Tree', path: '/admin/treeview', icon: 'mdi:family-tree' },
+
     { label: 'User Management', path: '/admin/users', icon: 'mdi:account-cog' },
     { label: 'Account', path: '/admin/account', icon: 'mdi:account' },
+    { label: 'Settings', path: '/admin/settings', icon: 'mdi:cog' },
+
     { label: 'Log Out', path: 'logout', icon: 'mdi:logout' },
   ]
   

@@ -6,8 +6,8 @@
     <div class="bg-white rounded-lg shadow-md p-6 mb-8">
       <h2 class="text-xl font-semibold text-gray-900 mb-4">Report Categories</h2>
       <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-        <button @click="activeReport = 'user_statistics'" :class="[activeReport === 'user_statistics' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300', 'py-3 px-4 rounded-md font-medium transition duration-300']">
-          User Statistics
+        <button @click="activeReport = 'citizen_statistics'" :class="[activeReport === 'citizen_statistics' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300', 'py-3 px-4 rounded-md font-medium transition duration-300']">
+          Citizen Statistics
         </button>
         <button @click="activeReport = 'house_demographics'" :class="[activeReport === 'house_demographics' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-800 hover:bg-gray-300', 'py-3 px-4 rounded-md font-medium transition duration-300']">
           House Demographics
@@ -23,8 +23,8 @@
 
     <!-- Report Content Area -->
     <div class="bg-white rounded-lg shadow-md p-6">
-      <div v-if="activeReport === 'user_statistics'">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">User Statistics Report</h2>
+      <div v-if="activeReport === 'citizen_statistics'">
+        <h2 class="text-xl font-semibold text-gray-900 mb-4">Citizen Statistics Report</h2>
         <p class="text-gray-600">Detailed statistics about user registrations, active users, roles, etc. (e.g., charts, graphs).</p>
         <!-- Placeholder for charts/tables -->
         <div class="mt-4 p-4 bg-gray-50 border border-gray-200 rounded-md">
@@ -65,12 +65,12 @@
 <script setup>
 import { ref } from 'vue';
 
-const activeReport = ref('user_statistics'); // Default active report
+const activeReport = ref('citizen_statistics'); // Default active report
 
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
-  roles: ['admin'],
+  // roles: ['admin'],
 });
 </script>
 

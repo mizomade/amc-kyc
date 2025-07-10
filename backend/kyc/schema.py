@@ -36,6 +36,10 @@ class PersonOut(BaseModel):
     class Config:
         orm_mode = True
 
+class PersonSearchOut(BaseModel):
+    id: int
+    name: str
+
 class PersonUpdate(BaseModel):
     first_name: Optional[str] = None
     hnam_hming: Optional[str] = None

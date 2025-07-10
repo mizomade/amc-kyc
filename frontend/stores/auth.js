@@ -30,7 +30,7 @@ export const useAuthStore = defineStore('auth', {
     async fetchUser() {
       const { $api } = useNuxtApp();
       try {
-        const response = await $api.get('/user/me/'); // Assuming this endpoint exists
+        const response = await $api.get('/user/getch/me/'); // Assuming this endpoint exists
         this.setUser(response.data);
       } catch (error) {
         console.error('Failed to fetch user:', error);

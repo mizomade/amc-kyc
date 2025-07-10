@@ -2,14 +2,14 @@ from ninja import Router
 from django.db.models import Q
 from kyc.models import Person,House
 from typing import List
-from kyc.schema import PersonOut
+from kyc.schema import PersonOut, PersonSearchOut
 
 router = Router(tags=['Search'])
 router = Router()
 
 
 #Person Seach na tur 
-@router.get("/person/", response=List[PersonOut])
+@router.get("/person/", response=List[PersonSearchOut])
 def search_person(
     request,
     epic: str = None,
@@ -38,16 +38,9 @@ def search_person(
         queryset = queryset.filter(mobile__icontains=mobile)
 
     return [
-        PersonOut(
+        PersonSearchOut(
             id=person.id,
-            first_name=person.first_name,
-            hnam_hming=person.hnam_hming,
-            epic_number=person.epic_number,
-            aadhar_number=person.aadhar_number,
-            house_number=person.house.house_number if person.house else None,
-            mobile=person.mobile,
-            father_name=f"{person.father.first_name} {person.father.hnam_hming}" if person.father else None,
-            mother_name=f"{person.mother.first_name} {person.mother.hnam_hming}" if person.mother else None,
+            name=person.full_name
         )
         for person in queryset[:50]
     ]
