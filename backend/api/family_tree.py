@@ -1,78 +1,97 @@
 from ninja import Router
 from django.http import Http404
 from kyc.models import Person
-from typing import Set
-
+from django.db import models
 
 router = Router(tags=['Deep Family Tree'])
 
-
-def build_family_tree(person, depth=2, visited: Set[int] = None):
-    """
-    Recursive tree builder for Person
-    """
+def build_family_tree(person, request, depth=5, visited=None, target_house_id=None, show_spouse=True, show_children=True):
     if visited is None:
         visited = set()
 
-    if not person:
-        return None
-
-    if person.id in visited:
-        return {"id": person.id, "first_name": person.first_name, "note": "cycle detected"}
+    if not person or person.id in visited:
+        return None  # Return None to skip rendering duplicates
 
     visited.add(person.id)
 
-    # Base structure
     node = {
         "id": person.id,
         "first_name": person.first_name,
         "hnam_hming": person.hnam_hming,
         "dob": person.dob,
         "gender": person.gender,
+        "photo": request.build_absolute_uri(person.photo.url) if person.photo else None,
     }
 
-    # Parents
-    if depth > 0:
-        node["father"] = build_family_tree(person.father, depth - 1, visited) if person.father else None
-        node["mother"] = build_family_tree(person.mother, depth - 1, visited) if person.mother else None
+    if show_spouse and person.spouse and person.spouse.id not in visited:
+        spouse_subtree = build_family_tree(
+            person.spouse,
+            request,
+            depth,
+            visited,
+            target_house_id,
+            show_spouse=False,
+            show_children=False
+        )
+        if spouse_subtree:
+            node["spouse"] = spouse_subtree
 
-    # Spouse (only one)
-    if depth > 0 and person.spouse:
-        node["spouse"] = build_family_tree(person.spouse, depth - 1, visited)
-    else:
-        node["spouse"] = None
+    if depth > 1 and show_children:
+        children_qs = Person.objects.select_related('father', 'mother', 'spouse').filter(
+            house_id=target_house_id
+        ).filter(
+            models.Q(father=person) | models.Q(mother=person)
+        ).distinct()
 
-    # Children by father/mother (combine & unique)
-    if depth > 0:
-        children_qs = person.children_by_father.all().union(person.children_by_mother.all()).distinct()
-        children_list = []
+        children = []
         for child in children_qs:
             if child.id not in visited:
-                children_list.append(build_family_tree(child, depth - 1, visited))
-        node["children"] = children_list
-    else:
-        node["children"] = []
+                subtree = build_family_tree(
+                    child,
+                    request,
+                    depth - 1,
+                    visited,
+                    target_house_id,
+                    show_spouse=True,
+                    show_children=True
+                )
+                if subtree:
+                    children.append(subtree)
 
-    # Siblings (same parents)
-    siblings_qs = Person.objects.filter(
-        (models.Q(father=person.father) | models.Q(mother=person.mother))
-    ).exclude(id=person.id).distinct()
-    node["siblings"] = [
-        {
-            "id": s.id,
-            "first_name": s.first_name,
-            "gender": s.gender
-        } for s in siblings_qs
-    ]
+        if children:
+            node["children"] = children
 
     return node
 
 
-@router.get("/{person_id}/deep-family-tree/", summary="Get a multi-gen family tree")
+@router.get("/{person_id}/deep-family-tree/", summary="Get full family tree for house")
 def deep_family_tree(request, person_id: int):
     try:
-        p = Person.objects.select_related('father', 'mother', 'spouse').get(id=person_id)
-        tree = build_family_tree(p, depth=3)  # Customize depth here
-        return tree
+        person = Person.objects.get(id=person_id)
+        target_house_id = person.house_id  # use .house_id_id for raw id
+
+        # Find root persons in same house (no parents)
+        root_persons = Person.objects.filter(
+            house_id=target_house_id,
+            father__isnull=True,
+            mother__isnull=True,
+        )
+
+        # If no root persons found, fallback to person searched
+        if not root_persons.exists():
+            root_persons = Person.objects.filter(id=person_id)
+
+        trees = []
+        visited = set()
+        for root in root_persons:
+            tree = build_family_tree(root, request, depth=5, target_house_id=target_house_id, visited=visited)
+            if tree:
+                trees.append(tree)
+
+        if len(trees) == 1:
+            return trees[0]
+
+        return trees
+
     except Person.DoesNotExist:
         raise Http404("Person not found")

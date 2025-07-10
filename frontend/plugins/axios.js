@@ -1,19 +1,21 @@
-import axios from 'axios';
+import axios from 'axios'
+import { useAuthStore } from '@/stores/auth'
 
 export default defineNuxtPlugin((nuxtApp) => {
+  console.log('✅ Axios plugin loaded')
+
   const api = axios.create({
     baseURL: 'http://localhost:8000/api',
-  });
+  })
 
-  // Add a request interceptor to include the token in the headers
   api.interceptors.request.use((config) => {
-    const authStore = useAuthStore();
-    const token = authStore.token;
-    if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+    const authStore = useAuthStore()
+    if (authStore.token) {
+      config.headers.Authorization = `Bearer ${authStore.token}`
     }
-    return config;
-  });
+    return config
+  })
 
-  nuxtApp.provide('api', api);
-});
+  // ✅ Ensure this exact line
+  nuxtApp.provide('axios', api) // 🔁 no "$"
+})

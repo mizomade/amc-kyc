@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel,field_validator
 from typing import Optional, List
 from datetime import date
 
@@ -12,6 +12,7 @@ class PersonCreate(BaseModel):
     epic_number: Optional[str] = None
     aadhar_number: Optional[str] = None
     marital_status: Optional[str] = None
+    photo: Optional[str] = None
 
     father_id: Optional[int] = None
     mother_id: Optional[int] = None
@@ -21,6 +22,16 @@ class PersonCreate(BaseModel):
     religion_id: Optional[int] = None
     denomination_id: Optional[int] = None
     role_id: Optional[int] = None
+
+    @field_validator(
+        'hnam_hming', 'blood_group', 'mobile', 'epic_number', 'aadhar_number',
+        'marital_status', 'photo','religion_id', 'denomination_id'
+    , mode='before')
+    def blank_string_to_none(cls, value):
+        if isinstance(value, str) and value.strip() == '':
+            return None
+        return value
+
 
 class PersonOut(BaseModel):
     id: int
@@ -59,7 +70,7 @@ class PersonUpdate(BaseModel):
 class HouseCreate(BaseModel):
     house_number: str
     parent_house_id: Optional[int] = None
-    veng_id: int
+    veng_id: Optional[int] = None
     street: Optional[str] = None
     landmarks: Optional[str] = None
     is_owner: Optional[bool] = True
@@ -140,3 +151,11 @@ class AttachmentCreate(BaseModel):
 class AttachmentUpdate(BaseModel):
     document_type_id: Optional[int] = None
     remarks: Optional[str] = None
+
+class DistrictOut(BaseModel):
+    id: int
+    name: str
+
+class VengOut(BaseModel):
+    id: int
+    name: str

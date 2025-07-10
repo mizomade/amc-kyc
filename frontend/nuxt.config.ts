@@ -6,4 +6,9 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css',
   ],
-});
+  plugins: [
+    '~/plugins/axios.js',
+    '~/plugins/pinia.client.js',
+  ],
+})
+

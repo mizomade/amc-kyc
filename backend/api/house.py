@@ -1,6 +1,7 @@
 from ninja import Router
 from kyc.models import House, Veng
-from kyc.schema import HouseCreate, HouseUpdate
+from core.models import Veng,District
+from kyc.schema import HouseCreate, HouseUpdate,VengOut,DistrictOut
 from django.http import Http404
 
 router = Router(tags=['House'])
@@ -62,3 +63,8 @@ def delete_house(request, house_id: int):
         return {"message": "House deleted successfully"}
     except House.DoesNotExist:
         raise Http404("House not found")
+
+@router.get("/districts/", response=list[DistrictOut])
+def list_districts(request):
+    return District.objects.all()
+

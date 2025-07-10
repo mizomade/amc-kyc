@@ -75,8 +75,8 @@ class Person(models.Model):
     dob = models.DateField(null=True, blank=True)
     blood_group = models.CharField(max_length=5, null=True, blank=True)
     mobile = models.CharField(max_length=20, null=True, blank=True)
-    epic_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
-    aadhar_number = models.CharField(max_length=20, unique=True, null=True, blank=True)
+    epic_number = models.CharField(max_length=20,  null=True, blank=True)
+    aadhar_number = models.CharField(max_length=20, null=True, blank=True)
     marital_status = models.CharField(max_length=20, null=True, blank=True)
 
     father = models.ForeignKey(
@@ -105,11 +105,28 @@ class Person(models.Model):
     verified_at = models.DateTimeField(null=True, blank=True)
     verification_remarks = models.TextField(null=True, blank=True)
 
-    created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
-    updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} ({self.hnam_hming})"
+
+    def save(self, *args, **kwargs):
+        # Call the original save first
+        super().save(*args, **kwargs)
+
+        # Handle mutual spouse logic
+        if self.spouse:
+            if self.spouse.spouse_id != self.id:
+                self.spouse.spouse = self
+                self.spouse.save()
+        else:
+            # If spouse is removed, ensure no one else still has this person as their spouse
+            reverse_spouse = Person.objects.filter(spouse_id=self.id).first()
+            if reverse_spouse:
+                reverse_spouse.spouse = None
+                reverse_spouse.save()
+
 
 
 # -----------------------------------
