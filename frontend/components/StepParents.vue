@@ -197,7 +197,7 @@ const submitParents = async () => {
     router.push('/family-entry/childrens')
   } catch (err) {
     console.error('Failed to save parents:', err)
-    alert('Failed to submit parent info. Please check all fields.')
+    alert('Failed to submit parent info. Please check all fields.') //
   }
 }
 
