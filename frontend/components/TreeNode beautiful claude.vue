@@ -31,15 +31,14 @@
       </div>
     </div>
     
-    <!-- Current Generation Level - Siblings, This Node, and Spouse horizontally -->
-    <div class="flex items-center justify-center relative">
-      <!-- Siblings (to the left) -->
-      <div v-if="hasSiblings" class="flex items-center mr-4">
+    <!-- This Node and its horizontal relatives -->
+    <div class="flex items-center justify-center">
+      <!-- Siblings -->
+      <div v-if="hasSiblings" class="flex items-center">
         <div
-          v-for="(sibling, index) in node.siblings"
+          v-for="sibling in node.siblings"
           :key="sibling.id"
-          class="flex items-center relative"
-          :class="{ 'ml-4': index > 0 }"
+          class="flex items-center mx-4 relative"
         >
           <TreeNode
             :node="sibling"
@@ -47,12 +46,12 @@
             :selectedId="selectedId"
             :generation="generation"
           />
+          <!-- Connector to main node -->
+          <div class="absolute top-1/2 h-0.5 connection-line rounded-full w-full left-1/2"></div>
         </div>
-        <!-- Horizontal connector line from siblings to main node -->
-        <div class="h-0.5 connection-line rounded-full w-8"></div>
       </div>
       
-      <!-- This Node (center) -->
+      <!-- This Node -->
       <div
         :class="[
           'node-card px-6 py-3 rounded-xl shadow-lg cursor-pointer transition-all duration-300 relative z-10',
@@ -75,41 +74,31 @@
         </div>
       </div>
       
-      <!-- Spouse (to the right) -->
-      <div v-if="node.spouse" class="flex items-center ml-4 relative">
-        <!-- Horizontal connector line from main node to spouse -->
-        <div class="h-0.5 connection-line rounded-full w-8"></div>
-        <div class="ml-4">
-          <TreeNode
-            :node="node.spouse"
-            :onSelect="onSelect"
-            :selectedId="selectedId"
-            :generation="generation"
-          />
-        </div>
+      <!-- Spouse -->
+      <div v-if="node.spouse" class="flex items-center mx-6 relative">
+        <TreeNode
+          :node="node.spouse"
+          :onSelect="onSelect"
+          :selectedId="selectedId"
+          :generation="generation"
+        />
+        <!-- Connector to main node -->
+        <div class="absolute top-1/2 h-0.5 connection-line rounded-full w-full right-1/2"></div>
       </div>
     </div>
     
-    <!-- Downward children (arranged horizontally) -->
+    <!-- Downward children -->
     <div v-if="hasChildren" class="flex justify-center items-start mt-6 relative">
       <!-- Vertical line from this node -->
       <div class="absolute bottom-full h-6 w-0.5 connection-line left-1/2 -translate-x-1/2 rounded-full"></div>
       
-      <!-- Horizontal line above children (spans across all children) -->
-      <div 
-        class="absolute top-0 h-0.5 connection-line rounded-full"
-        :style="{ 
-          left: `${100 / node.children.length / 2}%`, 
-          right: `${100 / node.children.length / 2}%` 
-        }"
-      ></div>
+      <!-- Horizontal line above children -->
+      <div class="absolute top-0 w-full h-0.5 connection-line rounded-full"></div>
       
-      <!-- Children arranged horizontally -->
       <div
-        v-for="(child, index) in node.children"
+        v-for="child in node.children"
         :key="child.id"
-        class="flex flex-col items-center relative"
-        :class="{ 'ml-8': index > 0 }"
+        class="flex flex-col items-center mx-6 relative"
       >
         <!-- Vertical line from horizontal to child -->
         <div class="absolute top-0 h-6 w-0.5 connection-line left-1/2 -translate-x-1/2 rounded-full"></div>
@@ -218,20 +207,6 @@ const handleClick = () => {
 }
 
 /* Responsive adjustments */
-@media (max-width: 1024px) {
-  .flex.items-center.ml-8 {
-    margin-left: 1.5rem;
-  }
-  
-  .flex.items-center.ml-4 {
-    margin-left: 1rem;
-  }
-  
-  .flex.items-center.mr-4 {
-    margin-right: 1rem;
-  }
-}
-
 @media (max-width: 768px) {
   .tree-node {
     font-size: 0.875rem;
@@ -241,16 +216,14 @@ const handleClick = () => {
     padding: 0.75rem 1rem;
   }
   
-  .flex.items-center.ml-8 {
+  .flex.items-center.mx-6 {
     margin-left: 1rem;
+    margin-right: 1rem;
   }
   
-  .flex.items-center.ml-4 {
-    margin-left: 0.75rem;
-  }
-  
-  .flex.items-center.mr-4 {
-    margin-right: 0.75rem;
+  .flex.items-center.mx-4 {
+    margin-left: 0.5rem;
+    margin-right: 0.5rem;
   }
 }
 
@@ -268,22 +241,5 @@ const handleClick = () => {
     height: 1.5rem;
     font-size: 0.75rem;
   }
-  
-  .flex.items-center.ml-8 {
-    margin-left: 0.75rem;
-  }
-  
-  .flex.items-center.ml-4 {
-    margin-left: 0.5rem;
-  }
-  
-  .flex.items-center.mr-4 {
-    margin-right: 0.5rem;
-  }
-}
-
-/* Ensure proper horizontal spacing for large families */
-.tree-node > div:last-child > div {
-  min-width: fit-content;
 }
 </style>

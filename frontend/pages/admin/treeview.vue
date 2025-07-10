@@ -36,6 +36,8 @@
               :onSelect="selectNode"
               :selectedId="selectedNode?.id"
             />
+
+            
           </div>
           <div v-else class="text-gray-500">Search and select a person to load the tree.</div>
         </div>
