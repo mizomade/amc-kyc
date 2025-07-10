@@ -49,7 +49,7 @@ const users = ref([
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
-  roles: ['admin'],
+  // roles: ['admin'],
 });
 </script>
 

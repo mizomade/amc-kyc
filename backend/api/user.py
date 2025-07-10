@@ -5,4 +5,7 @@ router = Router()
 
 @router.get("/me/", response=UserSchema)
 def me(request):
-    return request.user
+    
+    user = request.user
+    print("user", user)
+    return {"username": user.username, "groups": user.groups.all()}

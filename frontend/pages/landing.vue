@@ -11,7 +11,7 @@
       </div>
       <div class="container mx-auto px-6 relative z-10 text-center">
         <h1 class="text-4xl md:text-6xl font-extrabold leading-tight mb-4 animate-fade-in-up">
-          AMC Citizen Management System: Empowering Local Councils
+           Citizen Management System: Empowering Local Councils
         </h1>
         <p class="text-lg md:text-xl mb-8 max-w-3xl mx-auto opacity-90 animate-fade-in-up animation-delay-200">
           Efficiently manage citizen data for Local Councils and AMC Wards with our secure and comprehensive platform.
