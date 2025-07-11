@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Leaflet Map Toggle: Street & Satellite</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Leaflet CSS -->
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"
+    />
+
+    <style>
+      #map {
+        height: 500px;
+        width: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <h3>Leaflet Toggle: Street and Satellite</h3>
+    <div id="map"></div>
+
+    <!-- Leaflet JS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script>
+      // Initialize the map
+      var map = L.map("map", {
+  center: [20.5937, 78.9629],
+  zoom: 5,
+  maxZoom: 17 // use 17 or 18 to be safe
+});
+
+
+      // Base layers
+      var street = L.tileLayer(
+        "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
+        {
+          maxZoom: 19,
+          attribution: "&copy; OpenStreetMap contributors",
+        }
+      );
+
+      var satellite = L.tileLayer(
+  "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+  {
+    maxZoom: 17, // match your map
+    attribution: "Tiles © Esri",
+  }
+);
+
+
+      // Add default layer
+      street.addTo(map);
+
+      // Overlays (example: marker layer group)
+      var markers = L.layerGroup();
+
+      var marker;
+      map.on("click", function (e) {
+        var lat = e.latlng.lat;
+        var lng = e.latlng.lng;
+
+        if (marker) {
+          marker.setLatLng(e.latlng);
+        } else {
+          marker = L.marker(e.latlng).addTo(markers);
+        }
+
+        console.log("Latitude:", lat);
+        console.log("Longitude:", lng);
+
+        getAddress(lat, lng);
+      });
+
+      markers.addTo(map); // Add overlay by default
+
+      function getAddress(lat, lng) {
+        fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+        )
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Address:", data.display_name);
+          });
+      }
+
+      // Layer control
+      var baseMaps = {
+        "Street Map": street,
+        "Satellite Imagery": satellite,
+      };
+
+      var overlayMaps = {
+        "My Markers": markers,
+      };
+
+      L.control.layers(baseMaps, overlayMaps).addTo(map);
+    </script>
+  </body>
+</html>
