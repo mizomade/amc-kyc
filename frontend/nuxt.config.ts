@@ -9,7 +9,6 @@ export default defineNuxtConfig({
   plugins: [
     '~/plugins/axios.js',
     '~/plugins/pinia.client.js',
-    '~/plugins/toast.client.js',
   ],
 })
 

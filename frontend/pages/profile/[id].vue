@@ -120,10 +120,6 @@
 <script setup>
 import { useRoute, useNuxtApp } from '#app'
 import { ref, onMounted } from 'vue'
-import { useToast } from 'vue-toastification'
-
-const toast = useToast()
-
 
 const route = useRoute()
 const { $axios } = useNuxtApp()
@@ -177,10 +173,8 @@ async function saveChanges() {
     if (person.value.role?.id) payload.role = person.value.role.id
 
     await $axios.put(`/person/update/${person.value.id}`, payload)
-    toast.success("Updated successfully")
   } catch (error) {
     console.error('Failed to save profile:', error)
-    toast.error("Failed to update")
   } finally {
     saving.value = false
   }

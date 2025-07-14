@@ -102,9 +102,6 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const store = useFamilyFormStore()
 const { $axios } = useNuxtApp()
-import { useToast } from 'vue-toastification'
-
-const toast = useToast()
 
 const vengs = ref([])
 const selectedParentHouse = ref(null)
@@ -163,7 +160,7 @@ const handleTenantChange = () => {
 
 const submitHouse = async () => {
   if (!store.house.house_number || store.house.house_number.trim()===''){
-    toast.error("House Number is required")
+    
     return
   }
   try {

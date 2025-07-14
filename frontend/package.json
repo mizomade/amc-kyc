@@ -28,8 +28,7 @@
     "treant-js": "^1.0.1",
     "v-network-graph": "^0.9.21",
     "vue": "^3.5.17",
-    "vue-router": "^4.5.1",
-    "vue-toastification": "^2.0.0-rc.5"
+    "vue-router": "^4.5.1"
   },
   "description": "Look at the [Nuxt documentation](https://nuxt.com/docs/getting-started/introduction) to learn more.",
   "version": "1.0.0",

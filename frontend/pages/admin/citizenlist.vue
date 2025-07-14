@@ -104,9 +104,6 @@ import { ref, onMounted, watch } from 'vue'
 import { useNuxtApp } from '#app'
 import debounce from 'lodash/debounce'
 import { useRouter } from 'vue-router'
-import { useToast } from 'vue-toastification'
-
-const toast = useToast()
 
 const router = useRouter()
 
@@ -157,11 +154,11 @@ async function confirmDelete(personId) {
   if (confirm("Are you sure you want to delete this person?")) {
     try {
       await $axios.delete(`/person/delete/${personId}`)
-      toast.success('Person deleted successfully!')
+    
       persons.value = persons.value.filter(p => p.id !== personId)
     } catch (err) {
       console.error("Failed to delete person:", err)
-      toast.error('Failed to delete person.')
+
       alert("Failed to delete person.")
     }
   }
