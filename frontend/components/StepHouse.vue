@@ -6,7 +6,7 @@
     <input
       v-model="store.house.house_number"
       class="w-full px-3 py-2 border rounded"
-      placeholder="House Number"
+      placeholder="House Number" required
     />
 <!-- Parent House Search -->
 <div class="relative">
@@ -83,7 +83,6 @@
       <input v-model="store.house.landlord_veng" class="w-full px-3 py-2 border rounded" placeholder="Landlord Veng" />
     </div>
 
-    <!-- Remaining Fields -->
   
   </div>
   <!-- Next Button -->
@@ -103,6 +102,9 @@ import { useRouter } from 'vue-router'
 const router = useRouter()
 const store = useFamilyFormStore()
 const { $axios } = useNuxtApp()
+import { useToast } from 'vue-toastification'
+
+const toast = useToast()
 
 const vengs = ref([])
 const selectedParentHouse = ref(null)
@@ -160,6 +162,10 @@ const handleTenantChange = () => {
 
 
 const submitHouse = async () => {
+  if (!store.house.house_number || store.house.house_number.trim()===''){
+    toast.error("House Number is required")
+    return
+  }
   try {
     const response = await $axios.post('/house/', store.house)
     store.setHouseId(response.data.id)

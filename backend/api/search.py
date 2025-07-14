@@ -5,21 +5,23 @@ from typing import List
 from kyc.schema import PersonOut
 
 router = Router(tags=['Search'])
-router = Router()
 
-
-#Person Seach na tur 
 @router.get("/person/", response=List[PersonOut])
 def search_person(
     request,
+    id: int = None,
     epic: str = None,
     aadhar: str = None,
     name: str = None,
     hnam_hming: str = None,
     house_number: str = None,
     mobile: str = None,
+    dob: str = None,
 ):
     queryset = Person.objects.select_related("house", "father", "mother").all()
+    
+    if id:
+        queryset = queryset.filter(id=id)
 
     if epic:
         queryset = queryset.filter(epic_number__icontains=epic)
@@ -36,6 +38,9 @@ def search_person(
         queryset = queryset.filter(house__house_number__icontains=house_number)
     if mobile:
         queryset = queryset.filter(mobile__icontains=mobile)
+    if dob:
+        queryset = queryset.filter(dob=dob)
+
 
     return [
         PersonOut(
@@ -43,11 +48,13 @@ def search_person(
             first_name=person.first_name,
             hnam_hming=person.hnam_hming,
             epic_number=person.epic_number,
+            dob=person.dob.isoformat() if person.dob else None,
             aadhar_number=person.aadhar_number,
             house_number=person.house.house_number if person.house else None,
             mobile=person.mobile,
             father_name=f"{person.father.first_name} {person.father.hnam_hming}" if person.father else None,
             mother_name=f"{person.mother.first_name} {person.mother.hnam_hming}" if person.mother else None,
+            photo=request.build_absolute_uri(person.photo.url) if person.photo and person.photo.name else None,
         )
         for person in queryset[:50]
     ]

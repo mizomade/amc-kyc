@@ -16,6 +16,6 @@ export default defineNuxtPlugin((nuxtApp) => {
     return config
   })
 
-  // ✅ Ensure this exact line
-  nuxtApp.provide('axios', api) // 🔁 no "$"
+
+  nuxtApp.provide('axios', api) 
 })

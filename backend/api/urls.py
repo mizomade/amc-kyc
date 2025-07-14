@@ -10,7 +10,7 @@ from .certificates import router as certificates_router
 from .family_tree import router as family_tree
 from .district import router as district_router
 from api.religion import router as religion_router
-
+from .user import router as user_router
 api = NinjaAPI()
 
 api.add_router("/person/", person_router)
@@ -24,6 +24,7 @@ api.add_router("/certificates/", certificates_router)
 api.add_router("/family-tree/", family_tree)
 api.add_router("/district/",district_router)
 api.add_router("/meta/", religion_router)
+api.add_router("/user/", user_router)
 
 
 urlpatterns = api._get_urls()

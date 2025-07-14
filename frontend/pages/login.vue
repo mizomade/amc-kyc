@@ -1,42 +1,60 @@
 <template>
-  <div>
-    <h1>Login</h1>
-    <form @submit.prevent="login">
-      <input type="text" v-model="username" placeholder="Username" />
-      <input type="password" v-model="password" placeholder="Password" />
-      <select v-model="selectedRole">
-        <option value="">Select Role</option>
-        <option value="admin">Admin</option>
-        <option value="local_council">Local Council</option>
-        <option value="operator">Operator</option>
-        <option value="user">User</option>
-      </select>
-      <button type="submit">Login</button>
-    </form>
+  <div class="flex items-center justify-center min-h-screen bg-gray-100">
+    <div class="w-full max-w-md p-8 space-y-6 bg-white rounded-lg shadow-md">
+      <h1 class="text-2xl font-bold text-center text-gray-900">Login</h1>
+      <form @submit.prevent="login" class="space-y-6">
+        <div>
+          <label for="username" class="text-sm font-medium text-gray-700">Username</label>
+          <input
+            id="username"
+            type="text"
+            v-model="username"
+            placeholder="Username"
+            required
+            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        <div>
+          <label for="password" class="text-sm font-medium text-gray-700">Password</label>
+          <input
+            id="password"
+            type="password"
+            v-model="password"
+            placeholder="Password"
+            required
+            class="w-full px-3 py-2 mt-1 border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </div>
+        <div>
+          <button
+            type="submit"
+            class="w-full px-4 py-2 font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+          >
+            Login
+          </button>
+        </div>
+      </form>
+    </div>
   </div>
 </template>
 
 <script setup>
+definePageMeta({
+  middleware: 'guest',
+});
 import { ref } from 'vue';
 import { useAuthStore } from '~/stores/auth';
+import { useRouter } from 'vue-router';
 
 const username = ref('');
 const password = ref('');
-const selectedRole = ref(''); // New ref for selected role
 const authStore = useAuthStore();
-
-// Redirect to home if already authenticated
-if (authStore.token) {
-  navigateTo('/');
-}
+const router = useRouter();
 
 const login = async () => {
-  // Simulate a successful login and set the token and user role
-  authStore.setToken('simulated_token'); // Set a dummy token
-  authStore.setUser({ username: username.value, role: selectedRole.value }); // Set user with selected role
-
+  await authStore.login({ username: username.value, password: password.value });
   if (authStore.token) {
-    navigateTo('/');
+    router.push('/admin/');
   }
 };
 </script>
