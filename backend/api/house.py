@@ -1,9 +1,22 @@
 from ninja import Router
-from kyc.models import House, Veng
-from kyc.schema import HouseCreate, HouseUpdate
+from kyc.models import House, Veng, Person
+from kyc.schema import HouseCreate, HouseUpdate, PersonOut
 from django.http import Http404
+from typing import List
 
 router = Router(tags=['House'])
+
+@router.get("/", summary="Get list of all houses")
+def list_houses(request):
+    return [{"id": h.id, "house_number": h.house_number} for h in House.objects.all()]
+
+@router.get("/{house_id}/members", response=List[PersonOut], summary="Get all persons in a house")
+def list_house_members(request, house_id: int):
+    try:
+        house = House.objects.get(id=house_id)
+        return Person.objects.filter(house=house)
+    except House.DoesNotExist:
+        raise Http404("House not found")
 
 @router.post("/", summary="Create a new house")
 def create_house(request, data: HouseCreate):

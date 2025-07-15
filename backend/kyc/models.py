@@ -109,7 +109,7 @@ class Person(models.Model):
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
 
     def __str__(self):
-        return f"{self.first_name} ({self.hnam_hming})"
+        return f"{self.first_name} ({self.house.house_number if self.house else 'No House'})"
 
 
 # -----------------------------------

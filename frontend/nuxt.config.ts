@@ -8,4 +8,9 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/main.css',
   ],
+  nitro: {
+    alias: {
+      'form-data': 'form-data/lib/form_data.js'
+    }
+  }
 });
