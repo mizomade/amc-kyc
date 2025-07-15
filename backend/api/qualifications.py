@@ -1,10 +1,21 @@
 from ninja import Router
+from core.models import Education
+from core.schema import EducationSchema
 from kyc.models import PersonalQualification
 from kyc.schema import PersonalQualificationCreate, PersonalQualificationUpdate
 from django.http import Http404
 from typing import List
 
 router = Router(tags=['Personal Qualifications'])
+
+
+@router.get("/", response=List[EducationSchema], summary="List all  qualifications")
+def list_all_qualifications(request):
+    """
+    Returns a list of all personal qualifications.
+    """
+    return Education.objects.all()
+
 
 @router.post("/", summary="Create a new personal qualification")
 def create_personal_qualification(request, data: PersonalQualificationCreate):

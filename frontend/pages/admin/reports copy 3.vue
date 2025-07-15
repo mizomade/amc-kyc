@@ -28,60 +28,18 @@
           </div>
           <div v-else-if="summaryData" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             <div class="bg-blue-50 border-l-4 border-blue-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Total Citizens</h3>
-              <p class="text-4xl font-bold text-blue-900 mt-2">{{ summaryData.total_citizens }}</p>
+              <h3 class="text-lg font-medium text-gray-700">Total Persons</h3>
+              <p class="text-4xl font-bold text-blue-900 mt-2">{{ summaryData.persons }}</p>
             </div>
             <div class="bg-green-50 border-l-4 border-green-500 p-6 rounded-lg">
               <h3 class="text-lg font-medium text-gray-700">Total Houses</h3>
               <p class="text-4xl font-bold text-green-900 mt-2">{{ summaryData.houses }}</p>
             </div>
             <div class="bg-indigo-50 border-l-4 border-indigo-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Verified Persons</h3>
-              <p class="text-4xl font-bold text-indigo-900 mt-2">{{ summaryData.verified_persons }}</p>
-            </div>
-            <div class="bg-red-50 border-l-4 border-red-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Unverified Persons</h3>
-              <p class="text-4xl font-bold text-red-900 mt-2">{{ summaryData.unverified_persons }}</p>
-            </div>
-            <div class="bg-purple-50 border-l-4 border-purple-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Verified Houses</h3>
-              <p class="text-4xl font-bold text-purple-900 mt-2">{{ summaryData.verified_houses }}</p>
-            </div>
-            <div class="bg-orange-50 border-l-4 border-orange-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Unverified Houses</h3>
-              <p class="text-4xl font-bold text-orange-900 mt-2">{{ summaryData.unverified_houses }}</p>
-            </div>
-            <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Owner Houses</h3>
-              <p class="text-4xl font-bold text-yellow-900 mt-2">{{ summaryData.owner_houses }}</p>
-            </div>
-            <div class="bg-cyan-50 border-l-4 border-cyan-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Tenant Houses</h3>
-              <p class="text-4xl font-bold text-cyan-900 mt-2">{{ summaryData.tenant_houses }}</p>
-            </div>
-            <div class="bg-lime-50 border-l-4 border-lime-500 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Houses with Tenants</h3>
-              <p class="text-4xl font-bold text-lime-900 mt-2">{{ summaryData.have_tenant_houses }}</p>
-            </div>
-            <div class="bg-blue-100 border-l-4 border-blue-600 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Houses without Tenants</h3>
-              <p class="text-4xl font-bold text-blue-900 mt-2">{{ summaryData.houses_without_tenants }}</p>
-            </div>
-            <div class="bg-green-100 border-l-4 border-green-600 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Number of Tenants (Persons)</h3>
-              <p class="text-4xl font-bold text-green-900 mt-2">{{ summaryData.num_tenants_persons }}</p>
-            </div>
-            <div class="bg-purple-100 border-l-4 border-purple-600 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Average Household Size</h3>
-              <p class="text-4xl font-bold text-purple-900 mt-2">{{ summaryData.average_household_size }}</p>
-            </div>
-            <div class="bg-red-100 border-l-4 border-red-600 p-6 rounded-lg">
-              <h3 class="text-lg font-medium text-gray-700">Street with Most Houses</h3>
-              <p class="text-4xl font-bold text-red-900 mt-2">{{ summaryData.street_with_most_houses }}</p>
+              <h3 class="text-lg font-medium text-gray-700">Total Families</h3>
+              <p class="text-4xl font-bold text-indigo-900 mt-2">{{ summaryData.families }}</p>
             </div>
           </div>
-
-          
         </div>
 
         <!-- Persons Report -->
@@ -209,94 +167,41 @@
         </div>
 
         <!-- Houses Report -->
-        <div v-if="activeReport === 'houses'">
+
+        <!-- Keep your existing Houses block here if you have it -->
+
+
+
+                <div v-if="activeReport === 'houses'">
           <h2 class="text-2xl font-semibold text-gray-800 mb-6">Houses Report</h2>
           <!-- Filters -->
-          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            
-            <div>
-              <label class="block text-sm font-medium text-gray-700">House No. Search</label>
-              <input v-model="houseFilters.house_number_search" placeholder="House Number" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Landlord Name Search</label>
-              <input v-model="houseFilters.landlord_name_search" placeholder="Landlord Name" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-
-            <div>
-              <label for="house_veng_filter" class="block text-sm font-medium text-gray-700">Veng</label>
-              <select id="house_veng_filter" v-model="houseFilters.veng_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-                <option value="">All</option>
-                <option v-for="v in vengs" :key="v.id" :value="v.id">{{ v.name }}</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Street</label>
-              <input v-model="houseFilters.street" placeholder="Street name" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Household Size</label>
-              <input v-model.number="houseFilters.household_size" type="number" placeholder="Size" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Establish Date (Rent Start)</label>
-              <input v-model="houseFilters.rent_start_date" type="date" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Ownership</label>
-              <select v-model="houseFilters.is_owner" class="mt-1 block w-full border-gray-300 rounded-md">
-                <option :value="null">Any</option>
-                <option :value="true">Owner</option>
-                <option :value="false">Not Owner</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Has Tenants</label>
-              <select v-model="houseFilters.have_tenant" class="mt-1 block w-full border-gray-300 rounded-md">
-                <option :value="null">Any</option>
-                <option :value="true">Yes</option>
-                <option :value="false">No</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Is Tenant</label>
-              <select v-model="houseFilters.is_tenant" class="mt-1 block w-full border-gray-300 rounded-md">
-                <option :value="null">Any</option>
-                <option :value="true">Yes</option>
-                <option :value="false">No</option>
-              </select>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-gray-700">Landlord Veng</label>
-              <input v-model="houseFilters.landlord_veng" placeholder="Landlord Veng" class="mt-1 block w-full border-gray-300 rounded-md" />
-            </div>
-            
+          <div class="bg-gray-50 p-4 rounded-lg border border-gray-200 mb-6 flex items-center gap-4">
             <div>
               <label class="block text-sm font-medium text-gray-700">Verification Status</label>
-              <select v-model="houseFilters.is_verified" class="mt-1 block w-full border-gray-300 rounded-md">
-                <option :value="null">All</option>
-                <option :value="true">Verified</option>
-                <option :value="false">Not Verified</option>
-              </select>
+              <fieldset class="mt-2">
+                <div class="flex items-center space-x-4">
+                  <div class="flex items-center">
+                    <input id="verified_all" v-model="houseFilters.is_verified" :value="null" type="radio" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                    <label for="verified_all" class="ml-2 block text-sm text-gray-900">All</label>
+                  </div>
+                  <div class="flex items-center">
+                    <input id="verified_true" v-model="houseFilters.is_verified" :value="true" type="radio" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                    <label for="verified_true" class="ml-2 block text-sm text-gray-900">Verified</label>
+                  </div>
+                  <div class="flex items-center">
+                    <input id="verified_false" v-model="houseFilters.is_verified" :value="false" type="radio" class="focus:ring-blue-500 h-4 w-4 text-blue-600 border-gray-300">
+                    <label for="verified_false" class="ml-2 block text-sm text-gray-900">Not Verified</label>
+                  </div>
+                </div>
+              </fieldset>
             </div>
-
-            
-            <div class="col-span-full flex justify-end">
+            <div class="self-end">
               <button @click="fetchHousesReport" class="bg-blue-600 text-white px-4 py-2 rounded-md shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 flex items-center">
                 <Icon name="heroicons:magnifying-glass" class="w-5 h-5 mr-2" />
                 Generate
               </button>
             </div>
           </div>
-
           <!-- Table -->
           <div v-if="isLoading" class="flex justify-center items-center h-64">
             <Icon name="svg-spinners:3-dots-fade" class="w-12 h-12 text-blue-600" />
@@ -306,31 +211,23 @@
               <thead class="bg-gray-50">
                 <tr>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">House No.</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Street</th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Veng</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Landlord</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Household Size</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Awmtan Kum</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Has Tenants</th>
-                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">No. of Tenants</th>
                   <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Owner</th>
+                  <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Tenants</th>
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
                 <tr v-for="house in housesReportData" :key="house.id" class="hover:bg-gray-50">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ house.house_number }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.street || 'N/A' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.veng }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.landlord_name || 'N/A' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.household_size || 'N/A' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.awmtan_kum || 'N/A' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.have_tenant ? 'Yes' : 'No' }}</td>
-                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.tenants.length }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                     <span :class="[house.is_verified ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800', 'inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium']">
                       {{ house.is_verified ? 'Verified' : 'Not Verified' }}
                     </span>
                   </td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.owner ? `${house.owner.first_name} ${house.owner.hnam_hming}` : 'N/A' }}</td>
+                  <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.tenants.length }}</td>
                 </tr>
               </tbody>
             </table>
@@ -345,14 +242,12 @@
 
       </div>
     </div>
-    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useNuxtApp } from '#app';
-
- 
 
 const { $api } = useNuxtApp()
 
@@ -374,10 +269,6 @@ const denominations = ref([]);
 const educations = ref([]);
 const occupations = ref([]);
 
-
-
-
-
 // Filter models
 const personFilters = reactive({
   gender: '',
@@ -396,16 +287,6 @@ const personFilters = reactive({
 
 const houseFilters = reactive({
   is_verified: null, // null for all, true for verified, false for not
-  veng_id: '',
-  street: '',
-  is_owner: null,
-  have_tenant: null,
-  is_tenant: null,
-  house_number_search: '',
-  landlord_name_search: '',
-  household_size: null,
-  rent_start_date: '',
-  landlord_veng: '',
 });
 
 const setActiveReport = (reportName) => {
@@ -458,11 +339,9 @@ const fetchHousesReport = async () => {
   housesReportData.value = [];
   try {
     const params = new URLSearchParams();
-    Object.entries(houseFilters).forEach(([key, value]) => {
-      if (value !== null && value !== '') {
-        params.append(key, value);
-      }
-    });
+    if (houseFilters.is_verified !== null) {
+      params.append('is_verified', houseFilters.is_verified);
+    }
 
     const response = await $api.get(`/reports/houses?${params.toString()}`);
     housesReportData.value = response.data;
@@ -492,12 +371,11 @@ const fetchDropdownData = async () => {
   }
 };
 
-
-
-// Watch for changes in summaryData to update chart options
-
-
-
+// Fetch initial summary report on component mount
+onMounted(() => {
+  fetchSummaryReport();
+  fetchDropdownData();
+});
 </script>
 
 <style scoped>
@@ -507,5 +385,3 @@ const fetchDropdownData = async () => {
   align-self: flex-end;
 }
 </style>
-
-

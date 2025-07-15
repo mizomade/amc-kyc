@@ -4,10 +4,14 @@ export default defineNuxtConfig({
     '@nuxtjs/tailwindcss',
     '@nuxt/ui',
     '@nuxt/icon',
+    
   ],
   css: [
     '~/assets/css/main.css',
   ],
+  build: {
+    transpile: ['vue-quill-editor'],
+  },
   nitro: {
     alias: {
       'form-data': 'form-data/lib/form_data.js'

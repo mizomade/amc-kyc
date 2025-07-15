@@ -1,10 +1,10 @@
 from django.contrib import admin
+from .models import CertificateType, IssuedCertificate
 
 # Register your models here.
-from .models import *
-
-admin.site.register(Certificate)
 admin.site.register(CertificateType)
-admin.site.register(CertificateTemplate)
+admin.site.register(IssuedCertificate)
+
+
 
 

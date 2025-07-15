@@ -1,206 +1,104 @@
-from ninja import Router
+from ninja import Router, Schema
 from django.http import Http404
-from typing import List
+from typing import List, Optional
+from datetime import date, datetime
+from pydantic import ConfigDict
 
-from certificates.models import CertificateType, Certificate, CertificateTemplate
+from certificates.models import CertificateType, IssuedCertificate
+from kyc.models import Person
 
 router = Router(tags=["Certificates"])
 
+# =============================
+# Schemas
+# =============================
+
+class CertificateTypeSchema(Schema):
+    id: int
+    name: str
+    description: Optional[str] = None
+    template: str
+
+class IssuedCertificateSchema(Schema):
+    model_config = ConfigDict(from_attributes=True)
+
+    id: int
+    person_first_name: str
+    certificate_type: str
+    content: str
+    application_date: date
+    issue_date: Optional[date] = None
+    certificate_number: Optional[str] = None
+    issued_by: Optional[str] = None
+    remarks: Optional[str] = None
+    is_approved: bool
+    approved_at: Optional[datetime] = None
+
+class IssueCertificateSchema(Schema):
+    person_id: int
+    certificate_type_id: int
 
 # =============================
 # CertificateType endpoints
 # =============================
 
+@router.get("/types/", response=List[CertificateTypeSchema], summary="List all certificate types")
+def list_certificate_types(request):
+    return CertificateType.objects.all()
+
 @router.post("/types/", summary="Create a certificate type")
-def create_certificate_type(request):
-    data = request.POST
-    cert_type = CertificateType.objects.create(
-        name=data.get('name'),
-        description=data.get('description')
-    )
+def create_certificate_type(request, payload: CertificateTypeSchema):
+    cert_type = CertificateType.objects.create(**payload.dict())
     return {"id": cert_type.id, "message": "Certificate type created successfully"}
 
+# =============================
+# IssuedCertificate endpoints
+# =============================
 
-@router.get("/types/", summary="List all certificate types")
-def list_certificate_types(request):
+@router.get("/issued/", response=List[IssuedCertificateSchema], summary="List all issued certificates")
+def list_issued_certificates(request):
+    issued = IssuedCertificate.objects.select_related("person", "certificate_type")
     return [
         {
-            "id": ct.id,
-            "name": ct.name,
-            "description": ct.description
+            "id": cert.id,
+            "person_first_name": cert.person.first_name,
+            "certificate_type": cert.certificate_type.name,
+            "content": cert.content,
+            "application_date": cert.application_date,
+            "issue_date": cert.issue_date,
+            "certificate_number": cert.certificate_number,
+            "issued_by": cert.issued_by,
+            "remarks": cert.remarks,
+            "is_approved": cert.is_approved,
+            "approved_at": cert.approved_at,
         }
-        for ct in CertificateType.objects.all()
+        for cert in issued
     ]
 
-
-@router.put("/types/{type_id}", summary="Update a certificate type")
-def update_certificate_type(request, type_id: int):
+@router.post("/issue/", summary="Issue a new certificate")
+def issue_certificate(request, payload: IssueCertificateSchema):
     try:
-        ct = CertificateType.objects.get(id=type_id)
-        data = request.POST
-        ct.name = data.get('name', ct.name)
-        ct.description = data.get('description', ct.description)
-        ct.save()
-        return {"message": "Certificate type updated successfully"}
+        person = Person.objects.get(id=payload.person_id)
+        cert_type = CertificateType.objects.get(id=payload.certificate_type_id)
+
+        # Render the template
+        content = cert_type.template
+        for field in person._meta.fields:
+            placeholder = f"{{{{ person.{field.name} }}}}"
+            if placeholder in content:
+                content = content.replace(placeholder, str(getattr(person, field.name)))
+
+        # Create the issued certificate
+        issued_cert = IssuedCertificate.objects.create(
+            person=person,
+            certificate_type=cert_type,
+            content=content,
+            application_date=date.today(),
+            is_approved=False,
+        )
+        return {"id": issued_cert.id, "content": content}
+
+    except Person.DoesNotExist:
+        raise Http404("Person not found")
     except CertificateType.DoesNotExist:
         raise Http404("Certificate type not found")
-
-
-@router.delete("/types/{type_id}", summary="Delete a certificate type")
-def delete_certificate_type(request, type_id: int):
-    try:
-        ct = CertificateType.objects.get(id=type_id)
-        ct.delete()
-        return {"message": "Certificate type deleted successfully"}
-    except CertificateType.DoesNotExist:
-        raise Http404("Certificate type not found")
-
-
-# =============================
-# CertificateTemplate endpoints
-# =============================
-
-@router.post("/templates/", summary="Create a certificate template")
-def create_certificate_template(request):
-    data = request.POST
-    template = CertificateTemplate.objects.create(
-        certificate_type_id=data.get('certificate_type_id'),
-        name=data.get('name'),
-        body=data.get('body'),
-        is_active=data.get('is_active', 'true').lower() in ['true', '1']
-    )
-    return {"id": template.id, "message": "Certificate template created successfully"}
-
-
-@router.get("/templates/{type_id}", summary="List templates for a certificate type")
-def list_certificate_templates(request, type_id: int):
-    templates = CertificateTemplate.objects.filter(certificate_type_id=type_id)
-    return [
-        {
-            "id": t.id,
-            "certificate_type_id": t.certificate_type_id,
-            "name": t.name,
-            "body": t.body,
-            "is_active": t.is_active,
-            "created_at": t.created_at,
-            "updated_at": t.updated_at,
-        }
-        for t in templates
-    ]
-
-
-@router.put("/templates/{template_id}", summary="Update a certificate template")
-def update_certificate_template(request, template_id: int):
-    try:
-        t = CertificateTemplate.objects.get(id=template_id)
-        data = request.POST
-        t.name = data.get('name', t.name)
-        t.body = data.get('body', t.body)
-        if 'is_active' in data:
-            t.is_active = data.get('is_active', 'true').lower() in ['true', '1']
-        t.save()
-        return {"message": "Certificate template updated successfully"}
-    except CertificateTemplate.DoesNotExist:
-        raise Http404("Certificate template not found")
-
-
-@router.delete("/templates/{template_id}", summary="Delete a certificate template")
-def delete_certificate_template(request, template_id: int):
-    try:
-        t = CertificateTemplate.objects.get(id=template_id)
-        t.delete()
-        return {"message": "Certificate template deleted successfully"}
-    except CertificateTemplate.DoesNotExist:
-        raise Http404("Certificate template not found")
-
-
-# =============================
-# Certificate endpoints
-# =============================
-
-@router.post("/", summary="Create a certificate")
-def create_certificate(request):
-    data = request.POST
-    cert = Certificate.objects.create(
-        person_id=data.get('person_id'),
-        certificate_type_id=data.get('certificate_type_id'),
-        citizen_locality_id=data.get('citizen_locality_id') or None,
-        details=data.get('details'),
-        issue_date=data.get('issue_date') or None,
-        certificate_number=data.get('certificate_number'),
-        issued_by=data.get('issued_by'),
-        remarks=data.get('remarks'),
-        is_approved=data.get('is_approved', 'false').lower() in ['true', '1'],
-    )
-    return {"id": cert.id, "message": "Certificate created successfully"}
-
-
-@router.get("/person/{person_id}", summary="List certificates for a person")
-def list_certificates(request, person_id: int):
-    certs = Certificate.objects.filter(person_id=person_id)
-    return [
-        {
-            "id": c.id,
-            "certificate_number": c.certificate_number,
-            "certificate_type_id": c.certificate_type_id,
-            "citizen_locality_id": c.citizen_locality_id,
-            "details": c.details,
-            "application_date": c.application_date,
-            "issue_date": c.issue_date,
-            "issued_by": c.issued_by,
-            "remarks": c.remarks,
-            "is_approved": c.is_approved,
-            "approved_at": c.approved_at,
-        }
-        for c in certs
-    ]
-
-
-@router.get("/{certificate_id}", summary="Get single certificate")
-def get_certificate(request, certificate_id: int):
-    try:
-        c = Certificate.objects.get(id=certificate_id)
-        return {
-            "id": c.id,
-            "certificate_number": c.certificate_number,
-            "certificate_type_id": c.certificate_type_id,
-            "citizen_locality_id": c.citizen_locality_id,
-            "details": c.details,
-            "application_date": c.application_date,
-            "issue_date": c.issue_date,
-            "issued_by": c.issued_by,
-            "remarks": c.remarks,
-            "is_approved": c.is_approved,
-            "approved_at": c.approved_at,
-        }
-    except Certificate.DoesNotExist:
-        raise Http404("Certificate not found")
-
-
-@router.put("/{certificate_id}", summary="Update a certificate")
-def update_certificate(request, certificate_id: int):
-    try:
-        c = Certificate.objects.get(id=certificate_id)
-        data = request.POST
-        c.citizen_locality_id = data.get('citizen_locality_id') or c.citizen_locality_id
-        c.details = data.get('details') or c.details
-        c.issue_date = data.get('issue_date') or c.issue_date
-        c.certificate_number = data.get('certificate_number') or c.certificate_number
-        c.issued_by = data.get('issued_by') or c.issued_by
-        c.remarks = data.get('remarks') or c.remarks
-        if 'is_approved' in data:
-            c.is_approved = data.get('is_approved', 'false').lower() in ['true', '1']
-        c.save()
-        return {"message": "Certificate updated successfully"}
-    except Certificate.DoesNotExist:
-        raise Http404("Certificate not found")
-
-
-@router.delete("/{certificate_id}", summary="Delete a certificate")
-def delete_certificate(request, certificate_id: int):
-    try:
-        c = Certificate.objects.get(id=certificate_id)
-        c.delete()
-        return {"message": "Certificate deleted successfully"}
-    except Certificate.DoesNotExist:
-        raise Http404("Certificate not found")

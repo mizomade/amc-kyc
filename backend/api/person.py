@@ -5,6 +5,13 @@ from django.http import Http404
 
 router = Router(tags=['Person'])
 
+
+@router.get("/", summary="List all persons")
+def list_persons(request):
+    persons = list(Person.objects.all().values())
+    return {"persons": persons}
+
+
 @router.post("/", summary="Create a new person")
 def create_person(request, data: PersonCreate):
     person = Person.objects.create(

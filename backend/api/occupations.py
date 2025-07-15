@@ -1,10 +1,21 @@
 from ninja import Router
 from kyc.models import PersonalOccupation
+from core.models import Occupation
 from kyc.schema import PersonalOccupationCreate, PersonalOccupationUpdate
 from django.http import Http404
 from typing import List
-
+from core.schema import OccupationSchema
 router = Router(tags=['Personal Occupations'])
+
+
+@router.get("/", response=List[OccupationSchema], summary="List all  occupations")
+def list_personal_occupations(request):
+    """
+    Returns a list of all personal occupations.
+    """
+    occupations = Occupation.objects.all()
+    return occupations
+
 
 @router.post("/", summary="Create a new personal occupation")
 def create_personal_occupation(request, data: PersonalOccupationCreate):

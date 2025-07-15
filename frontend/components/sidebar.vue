@@ -65,6 +65,8 @@
     { label: 'Citizen List', path: '/admin/citizenlist', icon: 'mdi:account-group' },
     { label: 'Reports', path: '/admin/reports', icon: 'mdi:file-chart' },
     { label: 'Family Tree', path: '/admin/treeview', icon: 'mdi:family-tree' },
+    { label: 'Issue Certificate', path: '/admin/certificates', icon: 'mdi:certificate' },
+
 
     { label: 'User Management', path: '/admin/users', icon: 'mdi:account-cog' },
     { label: 'Account', path: '/admin/account', icon: 'mdi:account' },

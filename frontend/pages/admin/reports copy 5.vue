@@ -81,7 +81,36 @@
             </div>
           </div>
 
-          
+          <h2 class="text-2xl font-semibold text-gray-800 mt-8 mb-6">Charts</h2>
+          <div v-if="isLoading" class="flex justify-center items-center h-64">
+            <Icon name="svg-spinners:3-dots-fade" class="w-12 h-12 text-blue-600" />
+          </div>
+          <div v-else-if="summaryData" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div class="bg-gray-50 p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-700 mb-4">Gender Distribution</h3>
+              <client-only>
+                <vue-echarts :option="genderChartOptions" :autoresize="true" style="height: 300px;"></vue-echarts>
+              </client-only>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-700 mb-4">House Tenant Status</h3>
+              <client-only>
+                <vue-echarts :option="tenantChartOptions" :autoresize="true" style="height: 300px;"></vue-echarts>
+              </client-only>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg shadow">
+              <h3 class="text-lg font-medium text-gray-700 mb-4">Street with Most Houses</h3>
+              <client-only>
+                <vue-echarts :option="streetChartOptions" :autoresize="true" style="height: 300px;"></vue-echarts>
+              </client-only>
+            </div>
+            <div class="bg-gray-50 p-4 rounded-lg shadow lg:col-span-2">
+              <h3 class="text-lg font-medium text-gray-700 mb-4">House Rent Start Dates Over Time</h3>
+              <client-only>
+                <vue-echarts :option="rentDateChartOptions" :autoresize="true" style="height: 300px;"></vue-echarts>
+              </client-only>
+            </div>
+          </div>
         </div>
 
         <!-- Persons Report -->
@@ -345,14 +374,13 @@
 
       </div>
     </div>
-    </div>
+  </div>
 </template>
 
 <script setup>
 import { ref, onMounted, reactive, watch } from 'vue';
 import { useNuxtApp } from '#app';
-
- 
+// Import VueECharts component
 
 const { $api } = useNuxtApp()
 
@@ -374,9 +402,11 @@ const denominations = ref([]);
 const educations = ref([]);
 const occupations = ref([]);
 
-
-
-
+// Echarts options
+const genderChartOptions = ref({});
+const tenantChartOptions = ref({});
+const rentDateChartOptions = ref({});
+const streetChartOptions = ref({});
 
 // Filter models
 const personFilters = reactive({
@@ -492,12 +522,149 @@ const fetchDropdownData = async () => {
   }
 };
 
+const updateChartOptions = () => {
+  if (!summaryData.value) return;
 
+  // Gender Distribution Pie Chart
+  genderChartOptions.value = {
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left'
+    },
+    series: [
+      {
+        name: 'Gender Distribution',
+        type: 'pie',
+        radius: '50%',
+        data: [
+          { value: summaryData.value.male_persons, name: 'Male' },
+          { value: summaryData.value.female_persons, name: 'Female' },
+          { value: summaryData.value.other_gender_persons, name: 'Other' }
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  };
+
+  // House Tenant Status Pie Chart
+  tenantChartOptions.value = {
+    tooltip: {
+      trigger: 'item'
+    },
+    legend: {
+      orient: 'vertical',
+      left: 'left'
+    },
+    series: [
+      {
+        name: 'House Tenant Status',
+        type: 'pie',
+        radius: '50%',
+        data: [
+          { value: summaryData.value.have_tenant_houses, name: 'Houses with Tenants' },
+          { value: summaryData.value.houses_without_tenants, name: 'Houses without Tenants' }
+        ],
+        emphasis: {
+          itemStyle: {
+            shadowBlur: 10,
+            shadowOffsetX: 0,
+            shadowColor: 'rgba(0, 0, 0, 0.5)'
+          }
+        }
+      }
+    ]
+  };
+
+  // Street with Most Houses Bar Chart
+  const streetLabels = Object.keys(summaryData.value.street_counts);
+  const streetData = Object.values(summaryData.value.street_counts);
+  streetChartOptions.value = {
+    xAxis: {
+      type: 'category',
+      data: streetLabels,
+      axisLabel: {
+        interval: 0,
+        rotate: 30
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Number of Houses'
+    },
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'shadow'
+      }
+    },
+    series: [
+      {
+        name: 'Number of Houses',
+        type: 'bar',
+        data: streetData,
+        itemStyle: {
+          color: '#4BC0C0'
+        }
+      }
+    ]
+  };
+
+  // House Rent Start Dates Line Chart
+  const rentDates = Object.keys(summaryData.value.rent_start_dates_chart_data);
+  const rentCounts = Object.values(summaryData.value.rent_start_dates_chart_data);
+  rentDateChartOptions.value = {
+    xAxis: {
+      type: 'time',
+      axisLabel: {
+        formatter: '{yyyy}-{MM}-{dd}'
+      }
+    },
+    yAxis: {
+      type: 'value',
+      name: 'Number of Houses'
+    },
+    tooltip: {
+      trigger: 'axis',
+      formatter: function (params) {
+        params = params[0];
+        const date = new Date(params.name);
+        return date.toLocaleDateString() + ': ' + params.value;
+      }
+    },
+    series: [
+      {
+        name: 'Number of Houses Established',
+        type: 'line',
+        data: rentDates.map((date, index) => [date, rentCounts[index]]),
+        itemStyle: {
+          color: '#6366F1'
+        }
+      }
+    ]
+  };
+};
 
 // Watch for changes in summaryData to update chart options
+watch(summaryData, (newValue) => {
+  if (newValue) {
+    updateChartOptions();
+  }
+});
 
-
-
+// Fetch initial summary report on component mount
+onMounted(() => {
+  fetchSummaryReport();
+  fetchDropdownData();
+});
 </script>
 
 <style scoped>

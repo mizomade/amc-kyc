@@ -51,6 +51,18 @@
               <h3 class="text-lg font-medium text-gray-700">Unverified Houses</h3>
               <p class="text-4xl font-bold text-orange-900 mt-2">{{ summaryData.unverified_houses }}</p>
             </div>
+            <div class="bg-teal-50 border-l-4 border-teal-500 p-6 rounded-lg">
+              <h3 class="text-lg font-medium text-gray-700">Male Persons</h3>
+              <p class="text-4xl font-bold text-teal-900 mt-2">{{ summaryData.male_persons }}</p>
+            </div>
+            <div class="bg-pink-50 border-l-4 border-pink-500 p-6 rounded-lg">
+              <h3 class="text-lg font-medium text-gray-700">Female Persons</h3>
+              <p class="text-4xl font-bold text-pink-900 mt-2">{{ summaryData.female_persons }}</p>
+            </div>
+            <div class="bg-gray-100 border-l-4 border-gray-400 p-6 rounded-lg">
+              <h3 class="text-lg font-medium text-gray-700">Other Gender Persons</h3>
+              <p class="text-4xl font-bold text-gray-900 mt-2">{{ summaryData.other_gender_persons }}</p>
+            </div>
             <div class="bg-yellow-50 border-l-4 border-yellow-500 p-6 rounded-lg">
               <h3 class="text-lg font-medium text-gray-700">Owner Houses</h3>
               <p class="text-4xl font-bold text-yellow-900 mt-2">{{ summaryData.owner_houses }}</p>
@@ -79,9 +91,11 @@
               <h3 class="text-lg font-medium text-gray-700">Street with Most Houses</h3>
               <p class="text-4xl font-bold text-red-900 mt-2">{{ summaryData.street_with_most_houses }}</p>
             </div>
+            <div class="bg-yellow-100 border-l-4 border-yellow-600 p-6 rounded-lg col-span-full">
+              <h3 class="text-lg font-medium text-gray-700">House Rent Start Dates (for Time Series)</h3>
+              <p class="text-sm text-gray-600 mt-2">{{ summaryData.rent_start_dates.join(', ') }}</p>
+            </div>
           </div>
-
-          
         </div>
 
         <!-- Persons Report -->
@@ -345,14 +359,12 @@
 
       </div>
     </div>
-    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, reactive, watch } from 'vue';
+import { ref, onMounted, reactive } from 'vue';
 import { useNuxtApp } from '#app';
-
- 
 
 const { $api } = useNuxtApp()
 
@@ -373,10 +385,6 @@ const religions = ref([]);
 const denominations = ref([]);
 const educations = ref([]);
 const occupations = ref([]);
-
-
-
-
 
 // Filter models
 const personFilters = reactive({
@@ -492,12 +500,11 @@ const fetchDropdownData = async () => {
   }
 };
 
-
-
-// Watch for changes in summaryData to update chart options
-
-
-
+// Fetch initial summary report on component mount
+onMounted(() => {
+  fetchSummaryReport();
+  fetchDropdownData();
+});
 </script>
 
 <style scoped>
@@ -507,5 +514,3 @@ const fetchDropdownData = async () => {
   align-self: flex-end;
 }
 </style>
-
-
