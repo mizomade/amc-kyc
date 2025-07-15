@@ -68,7 +68,7 @@ def build_family_tree(person, depth=2, visited: Set[int] = None):
     return node
 
 
-@router.get("/{person_id}/deep-family-tree/", summary="Get a multi-gen family tree")
+@router.get("/{person_id}/tree", summary="Get a multi-gen family tree")
 def deep_family_tree(request, person_id: int):
     try:
         p = Person.objects.select_related('father', 'mother', 'spouse').get(id=person_id)

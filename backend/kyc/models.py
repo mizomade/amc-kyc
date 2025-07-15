@@ -37,12 +37,12 @@ class House(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
-    household_head = models.ForeignKey(
-        'Person',
-        null=True, blank=True,
-        on_delete=models.SET_NULL,
-        related_name='head_of_house'
-    )
+    # household_head = models.ForeignKey(
+    #     'Person',
+    #     null=True, blank=True,
+    #     on_delete=models.SET_NULL,
+    #     related_name='head_of_house'
+    # )
 
     is_verified = models.BooleanField(default=False)
     verified_by = models.CharField(max_length=100, null=True, blank=True)
@@ -100,6 +100,8 @@ class Person(models.Model):
     denomination = models.ForeignKey(Denomination, null=True, blank=True, on_delete=models.SET_NULL)
     role = models.ForeignKey(Role, null=True, blank=True, on_delete=models.SET_NULL)
 
+    is_househead = models.BooleanField(default=False,null=True)
+    
     is_verified = models.BooleanField(default=False)
     verified_by = models.CharField(max_length=100, null=True, blank=True)
     verified_at = models.DateTimeField(null=True, blank=True)

@@ -3,71 +3,105 @@
     <h1 class="text-3xl font-bold text-gray-900 mb-6">Family Tree View</h1>
 
     <div class="bg-white rounded-lg shadow-md p-6">
-      <h2 class="text-xl font-semibold text-gray-900 mb-4">Hierarchical Data Display</h2>
+      <!-- Search Box with Dropdown -->
+      <div class="mb-4 relative">
+        <input
+          v-model="searchQuery"
+          @input="fetchSuggestions"
+          type="text"
+          placeholder="Search citizen by name..."
+          class="w-full px-4 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+
+        <ul
+          v-if="suggestions.length"
+          class="absolute z-10 w-full bg-white border mt-1 rounded-md shadow-md"
+        >
+          <li
+            v-for="person in suggestions"
+            :key="person.id"
+            @click="selectSuggestion(person)"
+            class="px-4 py-2 hover:bg-blue-50 cursor-pointer"
+          >
+            {{ person.name }}
+          </li>
+        </ul>
+      </div>
 
       <div class="overflow-x-auto py-4">
         <div class="flex justify-center items-start">
-          <div class="tree-container">
-            <TreeNode :node="treeData" />
+          <div class="tree-container" v-if="treeData">
+            <TreeNode
+              :node="treeData"
+              :onSelect="selectNode"
+              :selectedId="selectedNode?.id"
+            />
+
+            
           </div>
+          <div v-else class="text-gray-500">Search and select a person to load the tree.</div>
         </div>
+      </div>
+
+      <!-- Selected Details -->
+      <div v-if="selectedNode" class="mt-8 p-4 bg-gray-100 rounded">
+        <h3 class="text-lg font-semibold mb-2">Person Details</h3>
+        <p><strong>Name:</strong> {{ selectedNode.name }}</p>
+        <p><strong>ID:</strong> {{ selectedNode.id }}</p>
+        <!-- More details can go here -->
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue';
-
-// Define a simple recursive component for tree nodes
-const TreeNode = {
-  props: {
-    node: Object,
-  },
-  template: `
-    <div class="tree-node flex flex-col items-center">
-      <div class="node-content bg-blue-500 text-white px-4 py-2 rounded-lg shadow-md cursor-pointer hover:bg-blue-600 transition duration-300">
-        {{ node.name }}
-      </div>
-      <div v-if="node.children && node.children.length" class="node-children flex mt-4">
-        <div v-for="child in node.children" :key="child.id" class="flex flex-col items-center mx-4 relative">
-          <div class="line-vertical"></div>
-          <div class="line-horizontal"></div>
-          <TreeNode :node="child" />
-        </div>
-      </div>
-    </div>
-  `,
-};
-
-// Sample tree data
-const treeData = ref({
-  id: 1,
-  name: 'Grandparent A',
-  children: [
-    {
-      id: 2,
-      name: 'Parent B',
-      children: [
-        { id: 4, name: 'Child D' },
-        { id: 5, name: 'Child E' },
-      ],
-    },
-    {
-      id: 3,
-      name: 'Parent C',
-      children: [
-        { id: 6, name: 'Child F' },
-      ],
-    },
-  ],
-});
+import { ref } from 'vue'
+import { useNuxtApp } from '#app'
+import TreeNode from '~/components/TreeNode.vue'
 
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
-//   roles: ['admin'],
-});
+})
+
+const { $api } = useNuxtApp()
+
+const searchQuery = ref('')
+const suggestions = ref([])
+const selectedNode = ref(null)
+const treeData = ref(null)
+
+const fetchSuggestions = async () => {
+  if (searchQuery.value.length < 2) {
+    suggestions.value = []
+    return
+  }
+
+  try {
+    const response = await $api.get(`/tree-view/citizens/search?name=${encodeURIComponent(searchQuery.value)}`)
+    suggestions.value = response.data
+  } catch (error) {
+    console.error('Error fetching suggestions:', error)
+    suggestions.value = []
+  }
+}
+
+const selectSuggestion = async (person) => {
+  searchQuery.value = person.name
+  suggestions.value = []
+
+  try {
+    const response = await $api.get(`/tree-view/citizens/${person.id}/tree`);
+    treeData.value = response.data
+  } catch (error) {
+    console.error('Error fetching tree:', error)
+    treeData.value = null
+  }
+}
+
+const selectNode = (node) => {
+  selectedNode.value = node
+}
 </script>
 
 <style scoped>
@@ -76,50 +110,5 @@ definePageMeta({
   justify-content: center;
   align-items: flex-start;
   padding: 20px;
-}
-
-.tree-node {
-  position: relative;
-}
-
-.node-children {
-  position: relative;
-  justify-content: center;
-}
-
-.node-children > div {
-  position: relative;
-}
-
-.line-vertical {
-  position: absolute;
-  top: -20px;
-  left: 50%;
-  width: 2px;
-  height: 20px;
-  background-color: #ccc;
-  transform: translateX(-50%);
-}
-
-.line-horizontal {
-  position: absolute;
-  top: -20px;
-  left: 0;
-  width: 100%;
-  height: 2px;
-  background-color: #ccc;
-}
-
-.node-children > div:first-child .line-horizontal {
-  left: 50%;
-  width: 50%;
-}
-
-.node-children > div:last-child .line-horizontal {
-  width: 50%;
-}
-
-.node-children > div:only-child .line-horizontal {
-  width: 0;
 }
 </style>
