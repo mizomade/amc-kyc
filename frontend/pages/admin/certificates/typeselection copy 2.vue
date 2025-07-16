@@ -128,11 +128,12 @@ const selectPerson = async (personId) => {
     // Populate formValues with person data
     formValues.value['person.id'] = personData.id;
     formValues.value['person.name'] = `${personData.first_name} ${personData.hnam_hming || ''}`.trim();
-    formValues.value['person.father_name'] = personData.father?.first_name || '';
-    formValues.value['person.permanent_address'] = personData.house?.house_number || ''; 
+    formValues.value['person.father_name'] = personData.father_name?.father.first_name.value || '';
+    formValues.value['person.permanent_address'] = personData.house_number || ''; 
     formValues.value['person.dob'] = personData.dob || '';
+    formValues.value['person.place_of_birth'] = personData.place_of_birth || ''; 
     formValues.value['person.gender'] = personData.gender || '';
-    formValues.value['veng.name'] = personData.house?.veng?.name || '';
+    formValues.value['veng.name'] = personData.veng_name || ''; // Assuming veng_name exists
 
     // Set selected person name for display
     selectedPersonName.value = formValues.value['person.name'];

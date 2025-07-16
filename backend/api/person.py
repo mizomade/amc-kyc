@@ -1,17 +1,57 @@
 from ninja import Router
-from kyc.models import Person, Religion, Denomination, House, Role
+from kyc.models import Person, Religion, Denomination, House, Role, PersonalQualification, PersonalOccupation, Attachment
 from kyc.schema import PersonCreate, PersonUpdate, PersonOut
 from django.http import Http404
+from django.shortcuts import get_object_or_404
 
 router = Router(tags=['Person'])
 
 @router.get("/{person_id}", response=PersonOut, summary="Get a single person by ID")
 def get_person(request, person_id: int):
-    try:
-        person = Person.objects.select_related('house', 'father', 'mother').get(id=person_id)
-        return person
-    except Person.DoesNotExist:
-        raise Http404("Person not found")
+    person = get_object_or_404(
+        Person.objects.select_related(
+            'house__veng',
+            'religion',
+            'denomination',
+            'role',
+            'father',
+            'mother',
+            'spouse'
+        ).prefetch_related(
+            'qualifications__education',
+            'occupations__occupation',
+            'attachments__document_type'
+        ),
+        id=person_id
+    )
+
+    # Manually serialize related managers to lists and photo to URL
+    person_data = {
+        **person.__dict__,
+        "qualifications": list(person.qualifications.all()),
+        "occupations": list(person.occupations.all()),
+        "attachments": list(person.attachments.all()),
+        "photo": person.photo.url if person.photo else None,
+    }
+    # Handle related objects that are not automatically serialized by Pydantic from __dict__
+    if person.house:
+        house_data = person.house.__dict__.copy()
+        house_data["maids"] = list(person.house.maids.all())
+        person_data["house"] = house_data
+    if person.religion:
+        person_data["religion"] = person.religion
+    if person.denomination:
+        person_data["denomination"] = person.denomination
+    if person.role:
+        person_data["role"] = person.role
+    if person.father:
+        person_data["father"] = person.father
+    if person.mother:
+        person_data["mother"] = person.mother
+    if person.spouse:
+        person_data["spouse"] = person.spouse
+
+    return PersonOut.model_validate(person_data)
 
 @router.get("/", summary="List all persons")
 def list_persons(request):

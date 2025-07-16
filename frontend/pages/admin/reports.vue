@@ -214,7 +214,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="p in personsReportData" :key="p.id">
+                <tr v-for="p in personsReportData" :key="p.id" @click="gotToPersonDetails(p.id)" class="cursor-pointer hover:bg-gray-50">
                   <td class="px-6 py-4">{{ p.first_name }} {{ p.hnam_hming }}</td>
                   <td class="px-6 py-4">{{ p.gender }}</td>
                   <td class="px-6 py-4">{{ p.dob }}</td>
@@ -381,7 +381,7 @@
                 </tr>
               </thead>
               <tbody class="bg-white divide-y divide-gray-200">
-                <tr v-for="house in housesReportData" :key="house.id" class="hover:bg-gray-50">
+                <tr v-for="house in housesReportData" :key="house.id" class="hover:bg-gray-50 cursor-pointer" @click="goToHouseDetails(house.id)">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ house.house_number }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.street || 'N/A' }}</td>
                   <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ house.veng }}</td>
@@ -659,6 +659,17 @@ onMounted(() => {
   fetchDropdownData();
 });
 // Watch for changes in summaryData to update chart options
+
+const gotToPersonDetails = (personId) => {
+  // Navigate to person details page
+  useRouter().push(`/admin/person/${personId}`);
+};
+
+
+const goToHouseDetails = (houseId) => {
+  // Navigate to house details page
+  useRouter().push(`/admin/house/${houseId}`);
+};
 
 
 
