@@ -1,10 +1,12 @@
 from ninja import Router,Form,File
 from kyc.models import Person, Religion, Denomination, House, Role
-from kyc.schema import PersonCreate, PersonUpdate
+from kyc.schema import PersonCreate, PersonUpdate,PersonListOut,HouseOut
 from django.http import Http404
 from ninja.errors import HttpError
-from typing import Optional
+from typing import Optional,List
 from ninja.files import UploadedFile
+from django.db.models import F,Q
+from datetime import date
 
 router = Router(tags=['Person'])
 
@@ -62,7 +64,6 @@ def create_person(
 
 
 
-
 @router.put("/update/{person_id}", summary="Update a person")
 def update_person(request, person_id: int, data: PersonUpdate):
     try:
@@ -84,7 +85,7 @@ def update_person(request, person_id: int, data: PersonUpdate):
     for field, model in foreign_keys.items():
         if field in update_data:
             fk_id = update_data.pop(field)
-            if fk_id:
+            if fk_id is not None:
                 try:
                     setattr(person, field, model.objects.get(id=fk_id))
                 except model.DoesNotExist:
@@ -98,7 +99,6 @@ def update_person(request, person_id: int, data: PersonUpdate):
     person.save()
     return {"message": "Person updated successfully"}
 
-
 @router.delete("/delete/{person_id}", summary="Delete a person")
 def delete_person(request, person_id: int):
     try:
@@ -108,6 +108,59 @@ def delete_person(request, person_id: int):
     except Person.DoesNotExist:
         raise Http404("Person not found")
 
+@router.get("/persons/", response=List[PersonListOut])
+def list_persons(request, search: Optional[str] = None):
+    queryset = Person.objects.select_related("house", "father", "mother").annotate(
+        house_number=F("house__house_number"),
+        father_name=F("father__first_name"),
+        mother_name=F("mother__first_name"),
+        photo_url=F("photo"),
+    )
+
+    # If search is provided, filter by first_name or hnam_hming
+    if search:
+        queryset = queryset.filter(
+            Q(first_name__icontains=search) | Q(hnam_hming__icontains=search)
+        )
+
+    person_list = list(queryset.values(
+        "id", "first_name", "hnam_hming", "epic_number", "aadhar_number",
+        "house_number", "mobile", "father_name", "mother_name", "photo_url", "dob"
+    ))
+
+    # Convert image field to absolute URL
+    for person in person_list:
+        if person["photo_url"]:
+            person["photo_url"] = request.build_absolute_uri(person["photo_url"])
+            # Calculate age
+        dob = person["dob"]
+        if dob:
+            today = date.today()
+            person["age"] = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        else:
+            person["age"] = None
+
+    return person_list
 
 
+@router.get("/houses/", response=list[HouseOut])
+def list_houses(request):
+    houses = House.objects.all()
+    results = []
 
+    for house in houses:
+        first_member = Person.objects.filter(house=house).first()
+        head_name = (
+            f"{first_member.first_name} {first_member.hnam_hming or ''}".strip()
+            if first_member else None
+        )
+
+        results.append({
+            "id": house.id,
+            "house_number": house.house_number,
+            "veng_name": house.veng.name if house.veng else None,
+            "is_owner": house.is_owner,
+            "head_name": head_name,
+        })
+
+    return results

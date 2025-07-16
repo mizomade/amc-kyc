@@ -3,47 +3,81 @@ from django.db.models import Q
 from kyc.models import Person,House
 from typing import List
 from kyc.schema import PersonOut, PersonSearchOut
-
+from datetime import date
 router = Router(tags=['Search'])
 router = Router()
 
+def calculate_age(dob):
+    if not dob:
+        return None
+    today = date.today()
+    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
-#Person Seach na tur 
-@router.get("/person/", response=List[PersonSearchOut])
+#Person Seach na tur plus filtering
+@router.get("/person/", response=List[PersonOut])
 def search_person(
     request,
-    epic: str = None,
-    aadhar: str = None,
-    name: str = None,
-    hnam_hming: str = None,
-    house_number: str = None,
-    mobile: str = None,
+    search: str = None,
+    occupation: str = None,   
+    age_group: str = None,    
+    id: int = None,
 ):
-    queryset = Person.objects.select_related("house", "father", "mother").all()
+    queryset = Person.objects.select_related("house", "father", "mother").prefetch_related("occupations__occupation").all()
 
-    if epic:
-        queryset = queryset.filter(epic_number__icontains=epic)
-    if aadhar:
-        queryset = queryset.filter(aadhar_number__icontains=aadhar)
-    if name:
+    if search:
         queryset = queryset.filter(
-            Q(first_name__icontains=name) |
-            Q(hnam_hming__icontains=name)
+            Q(first_name__icontains=search) |
+            Q(hnam_hming__icontains=search) |
+            Q(epic_number__icontains=search) |
+            Q(aadhar_number__icontains=search) |
+            Q(house__house_number__icontains=search) |
+            Q(mobile__icontains=search) |
+            Q(dob__icontains=search)
         )
-    if hnam_hming:
-        queryset = queryset.filter(hnam_hming__icontains=hnam_hming)
-    if house_number:
-        queryset = queryset.filter(house__house_number__icontains=house_number)
-    if mobile:
-        queryset = queryset.filter(mobile__icontains=mobile)
+
+    if occupation:
+        queryset = queryset.filter(occupations__occupation__name__iexact=occupation)
+
+    if age_group:
+        from datetime import date, timedelta
+
+        today = date.today()
+        age_ranges = {
+            "0-18": (today - timedelta(days=18*365), today),
+            "18-35": (today - timedelta(days=35*365), today - timedelta(days=18*365)),
+            "35-60": (today - timedelta(days=60*365), today - timedelta(days=35*365)),
+            "60 above": (None, today - timedelta(days=60*365)),
+        }
+
+        min_date, max_date = age_ranges.get(age_group, (None, None))
+
+        if min_date and max_date:
+            queryset = queryset.filter(dob__range=(min_date, max_date))
+        elif max_date:
+            queryset = queryset.filter(dob__lte=max_date)
+
+    if id:
+        queryset = queryset.filter(id=id)
 
     return [
-        PersonSearchOut(
+        PersonOut(
             id=person.id,
-            name=person.full_name
+            first_name=person.first_name,
+            hnam_hming=person.hnam_hming,
+            epic_number=person.epic_number,
+            dob=person.dob.isoformat() if person.dob else None,
+            aadhar_number=person.aadhar_number,
+            house_number=person.house.house_number if person.house else None,
+            mobile=person.mobile,
+            father_name=f"{person.father.first_name} {person.father.hnam_hming}" if person.father else None,
+            mother_name=f"{person.mother.first_name} {person.mother.hnam_hming}" if person.mother else None,
+            photo_url=request.build_absolute_uri(person.photo.url) if person.photo and person.photo.name else None,
+            age=calculate_age(person.dob),
+            occupations=[po.occupation.name for po in person.occupations.all()],
         )
         for person in queryset[:50]
     ]
+
 
 
 #Father search na fate regitered dawn a pa ber awlsam deuha search na , house_id mil zel in awmzia chu family member dang house dang ami a rawn lang dawnlo tihna

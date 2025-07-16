@@ -32,9 +32,26 @@ class PersonOut(BaseModel):
     mobile: Optional[str] = None
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
-
+    photo_url: Optional[str] = None
+    age: Optional[int]
+    occupations: List[str] = []
     class Config:
         orm_mode = True
+
+        
+class PersonListOut(BaseModel):
+    id: int
+    first_name: str
+    hnam_hming: Optional[str] = None
+    dob: Optional[date] = None
+    epic_number: Optional[str] = None
+    aadhar_number: Optional[str] = None
+    house_number: Optional[str] = None
+    mobile: Optional[str] = None
+    father_name: Optional[str] = None
+    mother_name: Optional[str] = None
+    photo_url: Optional[str] = None
+    age: Optional[int]
 
 class PersonSearchOut(BaseModel):
     id: int
@@ -81,6 +98,13 @@ class HouseCreate(BaseModel):
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     household_head_id: Optional[int] = None
+
+class HouseOut(BaseModel):
+    house_number: str
+    veng_name: Optional[str] = None
+    is_owner: bool
+    head_name: Optional[str] = None
+
 
 class HouseUpdate(BaseModel):
     house_number: Optional[str] = None
