@@ -1,6 +1,6 @@
 from ninja import Router
 from kyc.models import House, Veng, Person, HouseMaid, PersonalQualification, PersonalOccupation, Attachment, Religion, Denomination, Role, Education, Occupation, DocumentType
-from kyc.schema import HouseCreate, HouseUpdate, PersonOut, HouseOut, HouseMaidOut, PersonalQualificationOut, PersonalOccupationOut, AttachmentOut, VengOut, ReligionOut, DenominationOut, RoleOut, EducationOut, OccupationOut, DocumentTypeOut, PersonRelationOut
+from kyc.schema import HouseCreate, HouseUpdate, PersonOut, HouseOut, HouseMaidOut, PersonalQualificationOut, PersonalOccupationOut, AttachmentOut, VengOut, ReligionOut, DenominationOut, RoleOut, EducationOut, OccupationOut, DocumentTypeOut, PersonRelationOut, HouseMemberOut
 from django.http import Http404
 from typing import List, Optional, get_origin, get_args
 from django.shortcuts import get_object_or_404
@@ -32,7 +32,7 @@ def serialize_model_instance(instance, schema):
         if hasattr(value, 'all') and callable(value.all()):
             item_schema = None
             if field_name == 'members':
-                item_schema = PersonOut
+                item_schema = HouseMemberOut
             elif field_name == 'tenants':
                 item_schema = HouseOut
             elif field_name == 'maids':
@@ -45,7 +45,23 @@ def serialize_model_instance(instance, schema):
                 item_schema = AttachmentOut
 
             if item_schema:
-                data[field_name] = [serialize_model_instance(item, item_schema) for item in value.all()]
+                if item_schema == HouseMemberOut:
+                    data[field_name] = []
+                    for person_obj in value.all():
+                        member_data = {
+                            "id": person_obj.id,
+                            "first_name": person_obj.first_name,
+                            "hnam_hming": person_obj.hnam_hming,
+                            "gender": person_obj.gender,
+                            "dob": person_obj.dob.isoformat() if person_obj.dob else None,
+                            "mobile": person_obj.mobile,
+                            "religion": person_obj.religion.name if person_obj.religion else None,
+                            "denomination": person_obj.denomination.name if person_obj.denomination else None,
+                            "qualifications": [q.education.name for q in person_obj.qualifications.all()]
+                        }
+                        data[field_name].append(member_data)
+                else:
+                    data[field_name] = [serialize_model_instance(item, item_schema) for item in value.all()]
             else:
                 # If it's a RelatedManager but no specific item_schema, default to empty list
                 data[field_name] = []

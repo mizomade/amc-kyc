@@ -55,11 +55,26 @@ class HouseOut(BaseModel):
     updated_at: Optional[datetime] = None
     rent_start_date: Optional[date] = None
     rent_end_date: Optional[date] = None
-    members: List['PersonOut'] = []
+    members: List['HouseMemberOut'] = []
     tenants: List['HouseOut'] = [] # Nested HouseOut for tenants
     maids: List[HouseMaidOut] = []
     model_config = ConfigDict(from_attributes=True)
+    
+    
+    
+class HouseMemberOut(BaseModel):
+    id: int
+    first_name: str
+    hnam_hming: Optional[str]
+    gender: str
+    dob: Optional[date]
+    mobile: Optional[str]
 
+    religion: Optional[str]  # can be a str or nested schema if needed
+    denomination: Optional[str]
+    qualifications: Optional[List[str]] = []  
+    
+    
 class ReligionOut(BaseModel):
     id: int
     name: str

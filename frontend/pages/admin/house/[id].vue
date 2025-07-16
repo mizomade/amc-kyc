@@ -1,7 +1,7 @@
 <template>
   <div class="container mx-auto p-6 bg-gray-100 min-h-screen">
     <div class="relative mb-8">
-      <button @click="goBack" class="absolute top-0 left-0 bg-gray-200 hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg shadow-md flex items-center">
+      <button @click="goBack" class="absolute top-0 left-0  hover:bg-gray-300 text-gray-800 font-bold py-2 px-4 rounded-lg  flex items-center">
         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
           <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
         </svg>
@@ -38,6 +38,7 @@
             Show Location on Map
           </button>
         </div>
+
       </div>
 
       <!-- Members Card -->
@@ -124,6 +125,15 @@ import { ref, onMounted } from 'vue';
 import { useRoute, useRouter, useNuxtApp } from '#app';
 import DetailItem from '~/components/DetailItem.vue';
 import MapModal from '~/components/MapModal.vue';
+
+
+const showMap = ref(false)
+
+definePageMeta({
+  layout: 'admin',
+  middleware: 'auth',
+});
+
 
 const house = ref(null);
 const route = useRoute();

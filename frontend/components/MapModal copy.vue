@@ -1,85 +1,112 @@
 <template>
-  <div v-if="show" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-    <div class="bg-white rounded-lg shadow-xl p-6 w-11/12 md:w-2/3 lg:w-1/2 relative">
-      <button @click="$emit('close')" class="absolute top-3 right-3 text-gray-600 hover:text-gray-900 text-2xl font-bold">&times;</button>
-      <h2 class="text-2xl font-bold mb-4">House Location: {{ houseNumber }}</h2>
-      <div id="map" class="w-full" style="height: 500px;"></div>
+  <div
+    v-if="show"
+    class="fixed inset-0 z-50 bg-black bg-opacity-50 flex items-center justify-center"
+  >
+    <div class="bg-white w-full max-w-3xl p-4 rounded-xl relative shadow-lg">
+      <button
+        class="absolute top-2 right-2 text-gray-600 hover:text-red-500"
+        @click="emit('close')"
+      >
+        ✕
+      </button>
+
+      <h2 class="text-xl font-bold mb-2">Location Map</h2>
+      <p v-if="houseNumber" class="text-gray-600 mb-4">
+        House No.: <span class="font-semibold">{{ houseNumber }}</span>
+      </p>
+
+      <LMap
+        v-if="clientReady"
+        v-model:zoom="zoom"
+        :center="mapCenter"
+        style="height: 400px; width: 100%"
+        :use-global-leaflet="false"
+        @click="onMapClick"
+      >
+        <LTileLayer
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution="&copy; OpenStreetMap contributors"
+        />
+        <LTileLayer
+          v-if="satellite"
+          url="https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+          attribution="Tiles © Esri"
+        />
+        <LMarker v-if="marker" :lat-lng="marker" />
+      </LMap>
+
+      <div class="mt-4 text-sm text-gray-700 space-y-1">
+        <p v-if="marker">
+          <strong>Latitude:</strong> {{ marker.lat }}<br />
+          <strong>Longitude:</strong> {{ marker.lng }}
+        </p>
+        <p v-if="address"><strong>Address:</strong> {{ address }}</p>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch, nextTick, onUnmounted } from 'vue';
-import { useNuxtApp } from '#app';
+import { ref, computed, onMounted, watch } from 'vue'
 
+// Props
 const props = defineProps({
-  show: {
+  show: Boolean,
+  latitude: Number,
+  longitude: Number,
+  houseNumber: String,
+  satellite: {
     type: Boolean,
     default: false,
-  },
-  latitude: {
-    type: Number,
-    default: 20.5937, // Default to India center
-  },
-  longitude: {
-    type: Number,
-    default: 78.9629, // Default to India center
-  },
-  houseNumber: {
-    type: String,
-    default: 'Unknown',
-  },
-});
-
-const emit = defineEmits(['close']);
-
-const { $leaflet: L } = useNuxtApp();
-let map = null;
-
-const initMap = () => {
-  if (map) {
-    map.remove();
   }
+})
 
-  map = L.map('map', {
-    center: [props.latitude, props.longitude],
-    zoom: 15,
-    maxZoom: 17
-  });
+const emit = defineEmits(['close'])
 
-  L.tileLayer(
-    "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
-    {
-      maxZoom: 19,
-      attribution: "&copy; OpenStreetMap contributors",
+const zoom = ref(15)
+const marker = ref(null)
+const address = ref('')
+const clientReady = ref(false)
+
+// Map center based on props
+const mapCenter = computed(() =>
+  props.latitude && props.longitude
+    ? [props.latitude, props.longitude]
+    : [20.5937, 78.9629] // Default: India
+)
+
+watch(
+  () => props.show,
+  (val) => {
+    if (val && props.latitude && props.longitude) {
+      marker.value = {
+        lat: props.latitude,
+        lng: props.longitude,
+      }
+      getAddress(props.latitude, props.longitude)
     }
-  ).addTo(map);
-
-  if (props.latitude && props.longitude) {
-    L.marker([props.latitude, props.longitude]).addTo(map)
-      .bindPopup(`<b>${props.houseNumber}</b><br>Location.`).openPopup();
   }
-};
+)
 
-watch(() => props.show, (newValue) => {
-  if (newValue) {
-    nextTick(() => {
-      initMap();
-    });
-  } else if (map) {
-    map.remove(); // Clean up map when modal is closed
-    map = null;
-  }
-});
+onMounted(() => {
+  clientReady.value = true
+})
 
-onUnmounted(() => {
-  if (map) {
-    map.remove();
-    map = null;
+function onMapClick(e) {
+  marker.value = e.latlng
+  getAddress(e.latlng.lat, e.latlng.lng)
+}
+
+async function getAddress(lat, lng) {
+  try {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`
+    )
+    const data = await res.json()
+    address.value = data.display_name || ''
+  } catch (err) {
+    console.error('Address fetch failed', err)
   }
-});
+}
 </script>
-
-<style scoped>
-/* Add any component-specific styles here if needed */
-</style>
