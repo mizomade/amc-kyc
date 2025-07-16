@@ -19,6 +19,8 @@ def create_personal_occupation(request, data: PersonalOccupationCreate):
     )
     return {"id": occupation.id, "message": "Personal occupation created successfully"}
 
+
+
 @router.get("/{person_id}", summary="Get all personal occupations for a person", response=List[PersonalOccupationCreate])
 def get_personal_occupations(request, person_id: int):
     return PersonalOccupation.objects.filter(person_id=person_id)

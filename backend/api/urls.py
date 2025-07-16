@@ -16,9 +16,9 @@ from .denomination import router as denomination_router
 from .role import router as role_router
 
 from .reports import router as reports_router
-
-
-
+from api.education import router as education_router
+from api.occupationlist import router as occuaptionlist_router
+from api.documenttypelist import router as documenttypelist_router
 api = NinjaAPI()
 
 api.add_router("/person/", person_router)
@@ -37,7 +37,7 @@ api.add_router("/user/", user_router)
 api.add_router("/religion/", religion_router)
 api.add_router("/denomination/", denomination_router)
 api.add_router("/role/", role_router)
-
-
-
+api.add_router("/education/", education_router)
+api.add_router("/occupationlist/",occuaptionlist_router)
+api.add_router("/documentypelist/",documenttypelist_router)
 urlpatterns = api._get_urls()

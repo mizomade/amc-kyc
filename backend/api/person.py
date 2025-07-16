@@ -1,33 +1,66 @@
-from ninja import Router
+from ninja import Router,Form,File
 from kyc.models import Person, Religion, Denomination, House, Role
 from kyc.schema import PersonCreate, PersonUpdate
 from django.http import Http404
+from ninja.errors import HttpError
+from typing import Optional
+from ninja.files import UploadedFile
 
 router = Router(tags=['Person'])
 
 @router.post("/", summary="Create a new person")
-def create_person(request, data: PersonCreate):
+def create_person(
+    request,
+    first_name: str = Form(...),
+    hnam_hming: Optional[str] = Form(None),
+    gender: str = Form(...),
+    dob: Optional[str] = Form(None),
+    blood_group: Optional[str] = Form(None),
+    mobile: Optional[str] = Form(None),
+    epic_number: Optional[str] = Form(None),
+    aadhar_number: Optional[str] = Form(None),
+    marital_status: Optional[str] = Form(None),
+    father_id: Optional[int] = Form(None),
+    mother_id: Optional[int] = Form(None),
+    spouse_id: Optional[int] = Form(None),
+    house_id: Optional[int] = Form(None),
+    religion_id: Optional[int] = Form(None),
+    denomination_id: Optional[int] = Form(None),
+    photo: Optional[UploadedFile] = File(None),
+    rent_start_date: Optional[str] = Form(None),
+    rent_end_date: Optional[str] = Form(None),
+):
+    # Uniqueness checks
+    if epic_number and Person.objects.filter(epic_number=epic_number).exists():
+        raise HttpError(400, "EPIC number must be unique")
+    if aadhar_number and Person.objects.filter(aadhar_number=aadhar_number).exists():
+        raise HttpError(400, "Aadhar number must be unique")
+
     person = Person.objects.create(
-        first_name=data.first_name,
-        hnam_hming=data.hnam_hming,
-        gender=data.gender,
-        dob=data.dob,
-        blood_group=data.blood_group,
-        mobile=data.mobile,
-        epic_number=data.epic_number,
-        aadhar_number=data.aadhar_number,
-        marital_status=data.marital_status,
-
-        father_id=data.father_id,
-        mother_id=data.mother_id,
-        spouse_id=data.spouse_id,
-
-        house_id=data.house_id,
-        religion_id=data.religion_id,
-        denomination_id=data.denomination_id,
-        role_id=data.role_id,
+        first_name=first_name,
+        hnam_hming=hnam_hming or None,
+        gender=gender,
+        dob=dob or None,
+        blood_group=blood_group or None,
+        mobile=mobile or None,
+        epic_number=epic_number or None,
+        aadhar_number=aadhar_number or None,
+        marital_status=marital_status or None,
+        father_id=father_id,
+        mother_id=mother_id,
+        spouse_id=spouse_id,
+        house_id=house_id,
+        religion_id=religion_id,
+        denomination_id=denomination_id,
+        photo=photo if photo else None,
+        rent_start_date=rent_start_date or None,
+        rent_end_date=rent_end_date or None,  
     )
+
     return {"id": person.id, "message": "Person created successfully"}
+
+
+
 
 
 @router.put("/update/{person_id}", summary="Update a person")

@@ -51,8 +51,6 @@ class House(models.Model):
 
     created_at = models.DateTimeField(null=True, blank=True)
     updated_at = models.DateTimeField(null=True, blank=True)
-    rent_start_date = models.DateField(null=True, blank=True)
-    rent_end_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return self.house_number
@@ -98,7 +96,6 @@ class Person(models.Model):
     house = models.ForeignKey(House, null=True, blank=True, on_delete=models.SET_NULL)
     religion = models.ForeignKey(Religion, null=True, blank=True, on_delete=models.SET_NULL)
     denomination = models.ForeignKey(Denomination, null=True, blank=True, on_delete=models.SET_NULL)
-    role = models.ForeignKey(Role, null=True, blank=True, on_delete=models.SET_NULL)
 
     is_househead = models.BooleanField(default=False,null=True)
     
@@ -109,6 +106,8 @@ class Person(models.Model):
 
     created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+    rent_start_date = models.DateField(null=True, blank=True)
+    rent_end_date = models.DateField(null=True, blank=True)
 
     def __str__(self):
         return f"{self.first_name} ({self.house.house_number if self.house else 'No House'})"

@@ -10,13 +10,17 @@ router = Router(tags=['House'])
 def list_houses(request):
     return [{"id": h.id, "house_number": h.house_number} for h in House.objects.all()]
 
-@router.get("/{house_id}/members", response=List[PersonOut], summary="Get all persons in a house")
+@router.get("/{house_id}/members/", response=List[PersonOut], summary="Get all persons in a house")
 def list_house_members(request, house_id: int):
     try:
         house = House.objects.get(id=house_id)
-        return Person.objects.filter(house=house)
     except House.DoesNotExist:
         raise Http404("House not found")
+
+    return list(Person.objects.filter(house=house).values())
+
+
+
 
 @router.post("/", summary="Create a new house")
 def create_house(request, data: HouseCreate):
@@ -38,7 +42,6 @@ def create_house(request, data: HouseCreate):
         landlord_veng=data.landlord_veng,
         latitude=data.latitude,
         longitude=data.longitude,
-        household_head_id=data.household_head_id,
     )
     return {"id": house.id, "message": "House created successfully"}
 

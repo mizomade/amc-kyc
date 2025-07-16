@@ -1,4 +1,4 @@
-from ninja import Router, File
+from ninja import Router, File,Form
 from ninja.files import UploadedFile
 from kyc.models import Attachment
 from kyc.schema import AttachmentCreate, AttachmentUpdate
@@ -8,14 +8,25 @@ from typing import List
 router = Router(tags=['Attachments'])
 
 @router.post("/", summary="Create a new attachment")
-def create_attachment(request, data: AttachmentCreate, file: UploadedFile = File(...)):
+def create_attachment(
+    request,
+    person_id: int = Form(...),
+    document_type_id: int = Form(...),
+    remarks: str = Form(None),
+    file: UploadedFile = File(None),   
+):
     attachment = Attachment.objects.create(
-        person_id=data.person_id,
-        document_type_id=data.document_type_id,
-        remarks=data.remarks,
-        file=file,
+        person_id=person_id,
+        document_type_id=document_type_id,
+        remarks=remarks,
     )
+
+    if file:
+        attachment.file = file
+        attachment.save()
+
     return {"id": attachment.id, "message": "Attachment created successfully"}
+
 
 @router.get("/{person_id}", summary="Get all attachments for a person", response=List[AttachmentCreate])
 def get_attachments(request, person_id: int):
