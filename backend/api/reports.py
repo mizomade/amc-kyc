@@ -20,6 +20,10 @@ from .report_schemas import (
     HouseReportSchema,
     QualificationSchema,
     OccupationSchema,
+    PersonsReportResponse,
+    PersonStatisticsSchema,
+    HousesReportResponse,
+    HouseStatisticsSchema,
 )
 
 router = Router()
@@ -117,7 +121,7 @@ def get_dashboard_data(request):
     }
 
 
-@router.get("/persons", response=List[PersonReportSchema])
+@router.get("/persons", response=PersonsReportResponse)
 def person_report(
     request,
     gender: Optional[str] = None,
@@ -137,7 +141,7 @@ def person_report(
     Filter persons by various criteria. Returns list with qualifications & occupations.
     Optimized to avoid N+1 queries.
     """
-    persons = (
+    persons_queryset = (
         Person.objects.all()
         .select_related("house", "religion", "denomination")
         .prefetch_related(
@@ -148,44 +152,76 @@ def person_report(
 
     # Filters
     if gender:
-        persons = persons.filter(gender=gender)
+        persons_queryset = persons_queryset.filter(gender=gender)
 
     if min_age:
-        persons = persons.filter(dob__lte=date.today() - timedelta(days=min_age * 365.25))
+        persons_queryset = persons_queryset.filter(dob__lte=date.today() - timedelta(days=min_age * 365.25))
 
     if max_age:
-        persons = persons.filter(dob__gte=date.today() - timedelta(days=max_age * 365.25))
+        persons_queryset = persons_queryset.filter(dob__gte=date.today() - timedelta(days=max_age * 365.25))
 
     if street:
-        persons = persons.filter(house__street__icontains=street)
+        persons_queryset = persons_queryset.filter(house__street__icontains=street)
 
     if marital_status:
-        persons = persons.filter(marital_status=marital_status)
+        persons_queryset = persons_queryset.filter(marital_status=marital_status)
 
     if blood_group:
-        persons = persons.filter(blood_group=blood_group)
+        persons_queryset = persons_queryset.filter(blood_group=blood_group)
 
     if religion_id:
-        persons = persons.filter(religion_id=religion_id)
+        persons_queryset = persons_queryset.filter(religion_id=religion_id)
 
     if denomination_id:
-        persons = persons.filter(denomination_id=denomination_id)
+        persons_queryset = persons_queryset.filter(denomination_id=denomination_id)
 
     if education_id:
-        persons = persons.filter(qualifications__education_id=education_id).distinct()
+        persons_queryset = persons_queryset.filter(qualifications__education_id=education_id).distinct()
 
     if occupation_id:
-        persons = persons.filter(occupations__occupation_id=occupation_id).distinct()
+        persons_queryset = persons_queryset.filter(occupations__occupation_id=occupation_id).distinct()
 
     if is_verified is not None:
-        persons = persons.filter(is_verified=is_verified)
+        persons_queryset = persons_queryset.filter(is_verified=is_verified)
 
     if veng_id:
-        persons = persons.filter(house__veng_id=veng_id)
+        persons_queryset = persons_queryset.filter(house__veng_id=veng_id)
+
+    # Calculate statistics before pagination
+    total_citizens = persons_queryset.count()
+
+    gender_distribution = dict(persons_queryset.values('gender').annotate(count=Count('gender')).order_by('gender').values_list('gender', 'count'))
+
+    religion_distribution = dict(persons_queryset.values('religion__name').annotate(count=Count('religion__name')).order_by('religion__name').values_list('religion__name', 'count'))
+    religion_distribution = {k if k is not None else "Unknown": v for k, v in religion_distribution.items()}
+
+    denomination_distribution = dict(persons_queryset.values('denomination__name').annotate(count=Count('denomination__name')).order_by('denomination__name').values_list('denomination__name', 'count'))
+    denomination_distribution = {k if k is not None else "Unknown": v for k, v in denomination_distribution.items()}
+
+    education_distribution = {}
+    for person in persons_queryset.prefetch_related('qualifications__education'):
+        for q in person.qualifications.all():
+            edu_name = q.education.name if q.education else "Unknown"
+            education_distribution[edu_name] = education_distribution.get(edu_name, 0) + 1
+
+    occupation_distribution = {}
+    for person in persons_queryset.prefetch_related('occupations__occupation'):
+        for o in person.occupations.all():
+            occ_name = o.occupation.name if o.occupation else "Unknown"
+            occupation_distribution[occ_name] = occupation_distribution.get(occ_name, 0) + 1
+
+    statistics = PersonStatisticsSchema(
+        total_citizens=total_citizens,
+        gender_distribution=gender_distribution,
+        religion_distribution=religion_distribution,
+        denomination_distribution=denomination_distribution,
+        education_distribution=education_distribution,
+        occupation_distribution=occupation_distribution,
+    )
 
     # Build report with pre-fetched data
     report = []
-    for person in persons:
+    for person in persons_queryset:
         qual_list = [
             {
                 "education": q.education.name,
@@ -211,15 +247,17 @@ def person_report(
                     "hnam_hming": person.hnam_hming or "",   # fallback safe
                 "gender": person.gender,
                 "dob": str(person.dob) if person.dob else None,
+                "religion_id": person.religion_id,
+                "denomination_id": person.denomination_id,
                 "qualifications": qual_list,
                 "occupations": occ_list,
             }
         )
 
-    return report
+    return {"persons": report, "statistics": statistics}
 
 
-@router.get("/houses", response=List[HouseReportSchema])
+@router.get("/houses", response=HousesReportResponse)
 def house_report(
     request,
     is_verified: Optional[bool] = None,
@@ -238,54 +276,82 @@ def house_report(
     Returns houses with owner & tenants.
     Optimized to avoid N+1 by using `select_related` & `prefetch_related`.
     """
-    houses = (
+    houses_queryset = (
         House.objects.all()
         .select_related("veng")
     )
 
     if is_verified is not None:
-        houses = houses.filter(is_verified=is_verified)
+        houses_queryset = houses_queryset.filter(is_verified=is_verified)
 
     if veng_id:
-        houses = houses.filter(veng_id=veng_id)
+        houses_queryset = houses_queryset.filter(veng_id=veng_id)
 
     if street:
-        houses = houses.filter(street__icontains=street)
+        houses_queryset = houses_queryset.filter(street__icontains=street)
 
     if is_owner is not None:
-        houses = houses.filter(is_owner=is_owner)
+        houses_queryset = houses_queryset.filter(is_owner=is_owner)
 
     if have_tenant is not None:
-        houses = houses.filter(have_tenant=have_tenant)
+        houses_queryset = houses_queryset.filter(have_tenant=have_tenant)
 
     if is_tenant is not None:
-        houses = houses.filter(is_tenant=is_tenant)
+        houses_queryset = houses_queryset.filter(is_tenant=is_tenant)
 
     if house_number_search:
-        houses = houses.filter(house_number__icontains=house_number_search)
+        houses_queryset = houses_queryset.filter(house_number__icontains=house_number_search)
 
     if landlord_name_search:
-        houses = houses.filter(landlord_name__icontains=landlord_name_search)
+        houses_queryset = houses_queryset.filter(landlord_name__icontains=landlord_name_search)
 
     if household_size:
-        houses = houses.filter(household_size=household_size)
+        houses_queryset = houses_queryset.filter(household_size=household_size)
 
     if rent_start_date:
-        houses = houses.filter(rent_start_date=rent_start_date)
+        houses_queryset = houses_queryset.filter(rent_start_date=rent_start_date)
 
     if landlord_veng:
-        houses = houses.filter(landlord_veng__icontains=landlord_veng)
+        houses_queryset = houses_queryset.filter(landlord_veng__icontains=landlord_veng)
+
+    # Calculate statistics before pagination
+    total_houses = houses_queryset.count()
+
+    veng_distribution = dict(houses_queryset.values('veng__name').annotate(count=Count('veng__name')).order_by('veng__name').values_list('veng__name', 'count'))
+    veng_distribution = {k if k is not None else "Unknown": v for k, v in veng_distribution.items()}
+
+    ownership_distribution = dict(houses_queryset.values('is_owner').annotate(count=Count('is_owner')).order_by('is_owner').values_list('is_owner', 'count'))
+    ownership_distribution = {("Owner" if k else "Not Owner"): v for k, v in ownership_distribution.items()}
+
+    tenancy_distribution = dict(houses_queryset.values('have_tenant').annotate(count=Count('have_tenant')).order_by('have_tenant').values_list('have_tenant', 'count'))
+    tenancy_distribution = {("Has Tenants" if k else "No Tenants"): v for k, v in tenancy_distribution.items()}
+
+    average_household_size = houses_queryset.aggregate(avg_size=Avg('household_size'))['avg_size'] or 0.0
+    average_household_size = round(average_household_size, 2)
+
+    statistics = HouseStatisticsSchema(
+        total_houses=total_houses,
+        veng_distribution=veng_distribution,
+        ownership_distribution=ownership_distribution,
+        tenancy_distribution=tenancy_distribution,
+        average_household_size=average_household_size,
+    )
 
     report = []
-    for house in houses:
+    for house in houses_queryset:
         owner = (
             Person.objects.filter(house=house, is_househead=True)
-            .prefetch_related("qualifications__education", "occupations__occupation")
+            .select_related("religion", "denomination")
+            .prefetch_related(
+                "qualifications__education",
+                "occupations__occupation",
+            )
             .first()
         )
 
         tenants = (
             Person.objects.filter(house=house, is_househead=False)
+            .select_related("religion", "denomination")
             .prefetch_related("qualifications__education", "occupations__occupation")
         )
 
@@ -314,6 +380,8 @@ def house_report(
                 "hnam_hming": owner.hnam_hming,
                 "gender": owner.gender,
                 "dob": str(owner.dob) if owner.dob else None,
+                "religion_id": owner.religion_id,
+                "denomination_id": owner.denomination_id,
                 "qualifications": owner_qual,
                 "occupations": owner_occ,
             }
@@ -344,6 +412,8 @@ def house_report(
                     "hnam_hming": tenant.hnam_hming,
                     "gender": tenant.gender,
                     "dob": str(tenant.dob) if tenant.dob else None,
+                    "religion_id": tenant.religion_id,
+                    "denomination_id": tenant.denomination_id,
                     "qualifications": tenant_qual,
                     "occupations": tenant_occ,
                 }
@@ -365,4 +435,4 @@ def house_report(
             }
         )
 
-    return report
+    return {"houses": report, "statistics": statistics}

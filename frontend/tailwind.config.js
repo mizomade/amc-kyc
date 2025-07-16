@@ -7,6 +7,13 @@ module.exports = {
     "./plugins/**/*.{js,ts}",
     "./nuxt.config.{js,ts}",
   ],
+  safelist: [
+    'text-center',
+    'text-right',
+    'font-bold',
+    'underline',
+    // Add any other classes you want to preserve here
+  ],
   theme: {
     extend: {},
   },

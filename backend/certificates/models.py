@@ -10,8 +10,7 @@ class CertificateType(models.Model):
     """
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(null=True, blank=True)
-    # Rich text template with placeholders like {{ person.name }}, {{ person.permanent_address }}
-    template = models.TextField(help_text="Use placeholders like {{ person.name }}, {{ person.permanent_address }}", default='')
+    template = models.JSONField(help_text="Quill Delta for the certificate template", default=dict)
     variables = models.JSONField(default=dict, help_text="List of variables used in the template", blank=True, null=True)
 
     def __str__(self):
@@ -21,12 +20,11 @@ class IssuedCertificate(models.Model):
     """
     Stores each issued certificate, generated from a CertificateType template.
     """
-    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='issued_certificates')
+    person = models.ForeignKey(Person, on_delete=models.CASCADE, related_name='issued_certificates',null=True, blank=True)
     certificate_type = models.ForeignKey(CertificateType, on_delete=models.CASCADE, related_name='issued_certificates')
     
 
-    # The final, rendered content of the certificate after replacing placeholders
-    content = models.TextField()
+    content = models.JSONField()
     variables = models.JSONField(default=dict, help_text="Variables used in the certificate content", blank=True, null=True)
 
     application_date = models.DateField(auto_now_add=True)

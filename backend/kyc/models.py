@@ -110,6 +110,22 @@ class Person(models.Model):
     created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
     updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
 
+    @property
+    def full_name(self):
+        return f"{self.first_name} {self.hnam_hming or ''}".strip()
+
+    @property
+    def house_number(self):
+        return self.house.house_number if self.house else ""
+
+    @property
+    def father_name(self):
+        return self.father.full_name if self.father else ""
+
+    @property
+    def mother_name(self):
+        return self.mother.full_name if self.mother else ""
+
     def __str__(self):
         return f"{self.first_name} ({self.house.house_number if self.house else 'No House'})"
 

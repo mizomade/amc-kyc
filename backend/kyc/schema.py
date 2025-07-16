@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
 from datetime import date
 
@@ -33,8 +33,7 @@ class PersonOut(BaseModel):
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
 
-    class Config:
-        orm_mode = True
+    model_config = ConfigDict(from_attributes=True)
 
 class PersonSearchOut(BaseModel):
     id: int

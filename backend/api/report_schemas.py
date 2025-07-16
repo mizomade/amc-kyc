@@ -3,7 +3,7 @@ from typing import List, Optional, Dict
 
 class QualificationSchema(Schema):
     education: str
-    year_of_passing: int
+    year_of_passing: Optional[int]
     institution_name: Optional[str]
 
 class OccupationSchema(Schema):
@@ -17,8 +17,22 @@ class PersonReportSchema(Schema):
     hnam_hming: Optional[str]
     gender: str
     dob: Optional[str]
+    religion_id: Optional[int]
+    denomination_id: Optional[int]
     qualifications: List[QualificationSchema]
     occupations: List[OccupationSchema]
+
+class PersonStatisticsSchema(Schema):
+    total_citizens: int
+    gender_distribution: Dict[str, int]
+    religion_distribution: Dict[str, int]
+    denomination_distribution: Dict[str, int]
+    education_distribution: Dict[str, int]
+    occupation_distribution: Dict[str, int]
+
+class PersonsReportResponse(Schema):
+    persons: List[PersonReportSchema]
+    statistics: PersonStatisticsSchema
 
 class HouseReportSchema(Schema):
     id: int
@@ -32,6 +46,17 @@ class HouseReportSchema(Schema):
     household_size: Optional[int]
     awmtan_kum: Optional[int]
     have_tenant: bool
+
+class HouseStatisticsSchema(Schema):
+    total_houses: int
+    veng_distribution: Dict[str, int]
+    ownership_distribution: Dict[str, int]
+    tenancy_distribution: Dict[str, int]
+    average_household_size: float
+
+class HousesReportResponse(Schema):
+    houses: List[HouseReportSchema]
+    statistics: HouseStatisticsSchema
 
 class ChartDataSchema(Schema):
     label: str

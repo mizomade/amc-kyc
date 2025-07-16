@@ -1,163 +1,164 @@
 <template>
-  <div class="p-8 bg-gray-100 min-h-screen">
-    <div class="max-w-6xl mx-auto">
-      <header class="flex justify-between items-center mb-8">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-800">Issue New Certificate</h1>
-          <p class="text-gray-500">Create and issue a new certificate for a person.</p>
-        </div>
-        <div class="flex items-center space-x-4">
-          <button v-if="step === 2" @click="step = 1" class="px-4 py-2 text-sm font-medium text-gray-700 bg-white rounded-md border border-gray-300 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Back to Selection
-          </button>
-          <button @click="handleAction" :class="['px-6 py-2 text-sm font-medium text-white rounded-md focus:outline-none focus:ring-2 focus:ring-offset-2', step === 1 ? 'bg-indigo-600 hover:bg-indigo-700 focus:ring-indigo-500' : 'bg-green-600 hover:bg-green-700 focus:ring-green-500']">
-            {{ step === 1 ? 'Proceed to Editor' : 'Issue Certificate' }}
-          </button>
-        </div>
-      </header>
+  <div class="min-h-screen bg-gray-100 p-6">
+    <div class="max-w-5xl mx-auto bg-white p-8 rounded-lg shadow-xl relative">
+      <!-- Back Button -->
+      <button @click="goBack" class="absolute top-4 left-4 text-gray-600 hover:text-gray-900 transition duration-150 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 rounded-full p-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+        </svg>
+      </button>
 
-      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        <!-- Left Column: Form or Editor -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <!-- Step 1: Selection Form -->
-          <div v-if="step === 1">
-            <h2 class="text-xl font-semibold mb-4">1. Select Details</h2>
-            <div class="space-y-6">
-              <div>
-                <label for="person" class="block text-sm font-medium text-gray-700">Person</label>
-                <select v-model="selectedPerson" id="person" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                  <option disabled value="">Please select a person</option>
-                  <option v-for="person in people" :key="person.id" :value="person.id">{{ person.first_name }}</option>
-                </select>
-              </div>
-              <div>
-                <label for="cert-type" class="block text-sm font-medium text-gray-700">Certificate Type</label>
-                <select v-model="selectedCertType" id="cert-type" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-                  <option disabled value="">Please select a type</option>
-                  <option v-for="certType in certTypes" :key="certType.id" :value="certType.id">{{ certType.name }}</option>
-                </select>
-              </div>
-            </div>
-          </div>
+      <h1 class="text-4xl font-extrabold text-gray-900 mb-8 text-center">Issue Certificate</h1>
 
-          <!-- Step 2: Rich Text Editor -->
-          <div v-else>
-            <h2 class="text-xl font-semibold mb-4">2. Edit Certificate Content</h2>
-            <div ref="editor" style="height: 400px;"></div>
-          </div>
-        </div>
+      <div class="bg-gray-50 p-6 rounded-lg border border-gray-200 mb-8">
+        <div ref="editor" class="min-h-[400px] border border-gray-300 rounded-md overflow-hidden"></div>
+      </div>
 
-        <!-- Right Column: Live Preview -->
-        <div class="bg-white p-6 rounded-lg shadow-md">
-          <h2 class="text-xl font-semibold mb-4">Live Preview</h2>
-          <div class="prose prose-sm max-w-none border p-4 rounded-md h-full" v-html="certificateContent"></div>
-        </div>
+      <div class="flex justify-center space-x-6">
+        <button @click="printCertificate" class="px-8 py-3 bg-indigo-600 text-white rounded-lg shadow-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition ease-in-out duration-150">
+          Print Certificate
+        </button>
+        <button @click="issueAndPrintCertificate" class="px-8 py-3 bg-green-600 text-white rounded-lg shadow-md hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2 transition ease-in-out duration-150">
+          Issue & Print Certificate
+        </button>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, watch } from 'vue';
-import { useRouter } from 'vue-router';
-import axios from '~/plugins/axios.js';
-import Quill from 'quill';
+import { ref, onMounted, nextTick } from 'vue';
+import { useRoute } from 'vue-router';
+import { useNuxtApp } from '#app';
 import 'quill/dist/quill.snow.css';
 
-const { $api } = useNuxtApp();
+
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
-//   roles: ['admin'],
 });
 
-const step = ref(1);
-const people = ref([]);
-const certTypes = ref([]);
-const selectedPerson = ref('');
-const selectedCertType = ref('');
-const certificateContent = ref('<p>Select a person and certificate type to generate a preview.</p>');
+const route = useRoute();
+const { $api } = useNuxtApp();
 const editor = ref(null);
 let quillInstance = null;
-const router = useRouter();
+
+const formValues = ref({});
+
+const goBack = () => {
+  router.back();
+};
 
 onMounted(async () => {
-  try {
-    const [peopleRes, certTypesRes] = await Promise.all([
-        $api.get('/person/'),
-      $api.get('/certificates/types/')
-    ]);
-    people.value = peopleRes.data.persons;
-    certTypes.value = certTypesRes.data;
-  } catch (error) {
-    console.error('Error fetching initial data:', error);
+  if (process.client) {
+    const Quill = (await import('quill')).default;
+    
+    const certificateTypeId = route.query.certificateTypeId;
+    formValues.value = JSON.parse(route.query.formValues || '{}');
+
+    let templateDelta = {};
+
+    try {
+      const response = await $api.get(`/certificates/types/${certificateTypeId}/`);
+      templateDelta = response.data.template;
+    } catch (error) {
+      console.error('Error fetching certificate template:', error);
+      // Handle error, maybe redirect or show a message
+      return;
+    }
+
+    // Auto-calculate issue_date
+    const today = new Date();
+    const issueDate = `${today.getDate()}/${today.getMonth() + 1}/${today.getFullYear()}`;
+    formValues.value['issue_date'] = issueDate;
+
+    // Substitute variables in the Delta
+    if (templateDelta.ops) {
+      templateDelta.ops.forEach(op => {
+        if (typeof op.insert === 'string') {
+          for (const key in formValues.value) {
+            const placeholder = `{{ ${key} }}`;
+            op.insert = op.insert.replace(new RegExp(placeholder, 'g'), formValues.value[key]);
+          }
+          // Handle son/daughter
+          if (formValues.value['person.gender'] && formValues.value['person.gender'].toLowerCase() === 'female') {
+            op.insert = op.insert.replace('son/daughter of', 'daughter of');
+          } else {
+            op.insert = op.insert.replace('son/daughter of', 'son of');
+          }
+          // Replace any remaining placeholders
+          op.insert = op.insert.replace(/\{\{.*?\}\}/g, '[N/A]');
+        }
+      });
+    }
+
+    nextTick(() => {
+      if (editor.value) {
+        quillInstance = new Quill(editor.value, {
+          theme: 'snow',
+          modules: {
+            toolbar: [
+              ['bold', 'italic', 'underline'],
+              [{ 'list': 'ordered'}, { 'list': 'bullet' }],
+              [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+              ['clean']
+            ]
+          }
+        });
+
+        quillInstance.setContents(templateDelta);
+      }
+    });
   }
 });
 
-const initializeQuill = () => {
-  if (editor.value) {
-    quillInstance = new Quill(editor.value, {
-      theme: 'snow',
-      modules: {
-        toolbar: [
-          ['bold', 'italic', 'underline', 'strike'],
-          ['blockquote', 'code-block'],
-          [{ 'header': 1 }, { 'header': 2 }],
-          [{ 'list': 'ordered'}, { 'list': 'bullet' }],
-          [{ 'script': 'sub'}, { 'script': 'super' }],
-          [{ 'indent': '-1'}, { 'indent': '+1' }],
-          [{ 'direction': 'rtl' }],
-          [{ 'size': ['small', false, 'large', 'huge'] }],
-          [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
-          [{ 'color': [] }, { 'background': [] }],
-          [{ 'font': [] }],
-          [{ 'align': [] }],
-          ['clean']
-        ]
-      }
-    });
-    quillInstance.on('text-change', () => {
-      certificateContent.value = quillInstance.root.innerHTML;
-    });
+const issueAndPrintCertificate = async () => {
+  if (quillInstance) {
+    const certificateTypeId = route.query.certificateTypeId;
+    const personId = formValues.value['person.id']; // Assuming person.id is available in formValues
+    const content = quillInstance.getContents(); // Get content as Delta
+
+    if (!personId) {
+      alert('Person ID is required to issue a certificate.');
+      return;
+    }
+
+    try {
+      await $api.post('/certificates/issue/', {
+        person_id: personId,
+        certificate_type_id: certificateTypeId,
+        content: content // Pass the full Delta object
+      });
+      alert('Certificate issued successfully!');
+      printCertificate();
+    } catch (error) {
+      console.error('Error issuing certificate:', error);
+      alert('Failed to issue certificate.');
+    }
   }
 };
 
-watch(step, (newStep) => {
-  if (newStep === 2 && !quillInstance) {
-    setTimeout(initializeQuill, 0);
-  }
-});
+const printCertificate = () => {
+  if (quillInstance) {
+    const printWindow = window.open('', '', 'height=600,width=800');
+    const stylesheets = Array.from(document.styleSheets)
+      .map(sheet => sheet.href ? `<link rel="stylesheet" href="${sheet.href}">` : `<style>${Array.from(sheet.cssRules).map(rule => rule.cssText).join('')}</style>`)
+      .join('\n');
 
-const handleAction = async () => {
-  if (step.value === 1) {
-    if (!selectedPerson.value || !selectedCertType.value) {
-      alert('Please select both a person and a certificate type.');
-      return;
-    }
-    try {
-      const response = await $api.post('/certificates/issue/', {
-        person_id: selectedPerson.value,
-        certificate_type_id: selectedCertType.value
-      });
-      certificateContent.value = response.data.content;
-      if (quillInstance) {
-        quillInstance.root.innerHTML = certificateContent.value;
-      }
-      step.value = 2;
-    } catch (error) {
-      console.error('Error generating certificate preview:', error);
-    }
-  } else {
-    // In a real app, you'd likely save the final, edited `certificateContent`.
-    // This example assumes the initial generation is what's saved.
-    alert('Certificate issued successfully!');
-    router.push('/admin/certificates');
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Print Certificate</title>
+          ${stylesheets}
+        </head>
+        <body>
+          ${quillInstance.root.innerHTML}
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => { printWindow.print(); }, 500);
   }
 };
 </script>
-
-<style>
-.ql-editor {
-  min-height: 300px;
-}
-</style>

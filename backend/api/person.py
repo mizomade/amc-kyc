@@ -1,10 +1,17 @@
 from ninja import Router
 from kyc.models import Person, Religion, Denomination, House, Role
-from kyc.schema import PersonCreate, PersonUpdate
+from kyc.schema import PersonCreate, PersonUpdate, PersonOut
 from django.http import Http404
 
 router = Router(tags=['Person'])
 
+@router.get("/{person_id}", response=PersonOut, summary="Get a single person by ID")
+def get_person(request, person_id: int):
+    try:
+        person = Person.objects.select_related('house', 'father', 'mother').get(id=person_id)
+        return person
+    except Person.DoesNotExist:
+        raise Http404("Person not found")
 
 @router.get("/", summary="List all persons")
 def list_persons(request):
