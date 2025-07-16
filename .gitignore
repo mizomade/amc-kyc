@@ -1,0 +1,17 @@
+# Ignore media folder
+/backend/media/
+
+# Python ignores
+__pycache__/
+*.pyc
+*.pyo
+*.log
+.env
+
+# Node.js / Nuxt.js ignores
+node_modules/
+dist/
+.build/
+
+# VS Code settings (optional)
+.vscode/
