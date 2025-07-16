@@ -1,4 +1,4 @@
-from ninja import Router, Schema
+from ninja import Router
 from typing import List, Optional, Dict
 from datetime import date, timedelta
 from django.db.models import Count, Avg, F
@@ -14,90 +14,16 @@ from kyc.models import (
     Education,
     Occupation,
 )
+from .report_schemas import (
+    DashboardDataSchema,
+    PersonReportSchema,
+    HouseReportSchema,
+    QualificationSchema,
+    OccupationSchema,
+)
 
 router = Router()
 
-
-# --------------------------
-# 📌 SCHEMAS
-# --------------------------
-
-class QualificationSchema(Schema):
-    education: str
-    year_of_passing: int
-    institution_name: str
-
-
-class OccupationSchema(Schema):
-    occupation: str
-    employer_name: str
-    position_title: str
-
-class PersonReportSchema(Schema):
-    id: int
-    first_name: str
-    hnam_hming: Optional[str]  # <-- allow null
-    gender: str
-    dob: Optional[str]
-    qualifications: List[QualificationSchema]
-    occupations: List[OccupationSchema]
-
-
-
-class HouseReportSchema(Schema):
-    id: int
-    house_number: str
-    veng: str
-    is_verified: bool
-    owner: Optional[PersonReportSchema]
-    tenants: List[PersonReportSchema]
-    street: Optional[str]
-    landlord_name: Optional[str]
-    household_size: Optional[int]
-    awmtan_kum: Optional[int]
-    have_tenant: bool
-
-
-class ChartDataSchema(Schema):
-    label: str
-    value: int
-
-class DashboardDataSchema(Schema):
-    # House Stats
-    total_houses: int
-    owned_houses: int
-    rented_houses: int
-    verified_houses_count: int
-    unverified_houses_count: int
-    houses_with_tenants: int
-    houses_without_tenants: int
-    timeseries_rent_start: Dict[str, int]
-    average_household_size: Optional[float]
-
-    # Citizen Stats
-    total_citizens: int
-    male_citizens: int
-    female_citizens: int
-    other_gender_citizens: int
-    age_group_0_18: int
-    age_group_18_35: int
-    age_group_35_60: int
-    age_group_60_plus: int
-    verified_citizens_percentage: float
-
-    # Religion
-    religion_distribution: List[ChartDataSchema]
-    top_5_denominations: List[ChartDataSchema]
-
-    # Education/Occupation
-    top_5_occupations: List[ChartDataSchema]
-    top_5_education_levels: List[ChartDataSchema]
-    graduation_trends: Dict[str, int]
-
-
-# --------------------------
-# 📌 ROUTES
-# --------------------------
 
 @router.get("/dashboard", response=DashboardDataSchema)
 def get_dashboard_data(request):
@@ -125,12 +51,25 @@ def get_dashboard_data(request):
     female_citizens = Person.objects.filter(gender='Female').count()
     other_gender_citizens = Person.objects.exclude(gender__in=['Male', 'Female']).count()
 
+    gender_distribution = [
+        {"label": "Male", "value": male_citizens},
+        {"label": "Female", "value": female_citizens},
+        {"label": "Other", "value": other_gender_citizens},
+    ]
+
     # Age group breakdown
     today = date.today()
     age_0_18 = Person.objects.filter(dob__gte=today - timedelta(days=18*365.25)).count()
     age_18_35 = Person.objects.filter(dob__lt=today - timedelta(days=18*365.25), dob__gte=today - timedelta(days=35*365.25)).count()
     age_35_60 = Person.objects.filter(dob__lt=today - timedelta(days=35*365.25), dob__gte=today - timedelta(days=60*365.25)).count()
     age_60_plus = Person.objects.filter(dob__lt=today - timedelta(days=60*365.25)).count()
+
+    age_group_distribution = [
+        {"label": "0-18", "value": age_0_18},
+        {"label": "18-35", "value": age_18_35},
+        {"label": "35-60", "value": age_35_60},
+        {"label": "60+", "value": age_60_plus},
+    ]
 
     verified_citizens_count = Person.objects.filter(is_verified=True).count()
     verified_citizens_percentage = (verified_citizens_count / total_citizens * 100) if total_citizens > 0 else 0
@@ -165,13 +104,8 @@ def get_dashboard_data(request):
         "average_household_size": average_household_size,
 
         "total_citizens": total_citizens,
-        "male_citizens": male_citizens,
-        "female_citizens": female_citizens,
-        "other_gender_citizens": other_gender_citizens,
-        "age_group_0_18": age_0_18,
-        "age_group_18_35": age_18_35,
-        "age_group_35_60": age_35_60,
-        "age_group_60_plus": age_60_plus,
+        "gender_distribution": gender_distribution,
+        "age_group_distribution": age_group_distribution,
         "verified_citizens_percentage": round(verified_citizens_percentage, 2),
 
         "religion_distribution": religion_distribution,
@@ -256,7 +190,7 @@ def person_report(
             {
                 "education": q.education.name,
                 "year_of_passing": q.year_of_passing,
-                "institution_name": q.institution_name,
+                "institution_name": q.institution_name or "",
             }
             for q in person.qualifications.all()
         ]
@@ -264,8 +198,8 @@ def person_report(
         occ_list = [
             {
                 "occupation": o.occupation.name,
-                "employer_name": o.employer_name,
-                "position_title": o.position_title,
+                "employer_name": o.employer_name or "",
+                "position_title": o.position_title or "",
             }
             for o in person.occupations.all()
         ]
@@ -362,15 +296,15 @@ def house_report(
                 {
                     "education": q.education.name,
                     "year_of_passing": q.year_of_passing,
-                    "institution_name": q.institution_name,
+                    "institution_name": q.institution_name or "",
                 }
                 for q in owner.qualifications.all()
             ]
             owner_occ = [
                 {
                     "occupation": o.occupation.name,
-                    "employer_name": o.employer_name,
-                    "position_title": o.position_title,
+                    "employer_name": o.employer_name or "",
+                    "position_title": o.position_title or "",
                 }
                 for o in owner.occupations.all()
             ]
@@ -391,15 +325,15 @@ def house_report(
                 {
                     "education": q.education.name,
                     "year_of_passing": q.year_of_passing,
-                    "institution_name": q.institution_name,
+                    "institution_name": q.institution_name or "",
                 }
                 for q in tenant.qualifications.all()
             ]
             tenant_occ = [
                 {
                     "occupation": o.occupation.name,
-                    "employer_name": o.employer_name,
-                    "position_title": o.position_title,
+                    "employer_name": o.employer_name or "",
+                    "position_title": o.position_title or "",
                 }
                 for o in tenant.occupations.all()
             ]

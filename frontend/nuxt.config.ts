@@ -1,11 +1,14 @@
 export default defineNuxtConfig({
-  modules: [
-    '@pinia/nuxt',
-    '@nuxtjs/tailwindcss',
-    '@nuxt/ui',
-    '@nuxt/icon',
-    
-  ],
+
+  app: {
+    head: {
+      script: [
+        // { src: 'https://cdn.jsdelivr.net/npm/chart.js', defer: true }, // Example for Chart.js CDN
+        // Add other global scripts here
+      ],
+    },
+  },
+  modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@nuxt/ui', '@nuxt/icon', 'nuxt-echarts'],
   css: [
     '~/assets/css/main.css',
   ],
@@ -16,5 +19,8 @@ export default defineNuxtConfig({
     alias: {
       'form-data': 'form-data/lib/form_data.js'
     }
-  }
+  },
+  plugins: [
+    { src: '~/plugins/chart.js', mode: 'client' }
+  ]
 });

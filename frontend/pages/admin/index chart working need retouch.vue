@@ -1,4 +1,4 @@
-'''<template>
+<template>
   <div class="page-container">
     <h1 class="text-3xl font-bold text-gray-800 mb-8 text-center">Admin Dashboard</h1>
 
@@ -24,7 +24,7 @@
             <DoughnutChart :chart-data="houseTenantData" :chart-options="chartOptions" />
           </div>
           <div class="chart-wrapper col-span-full">
-            <h3 class="text-xl font-medium text-gray-700 mb-4">House Establishment Trends</h3>
+            <h3 class="text-xl font-medium text-gray-700 mb-4">Rent Start Trends</h3>
             <LineChart :chart-data="rentStartTrendData" :chart-options="chartOptions" />
           </div>
         </div>
@@ -129,7 +129,7 @@ onMounted(async () => {
   }
 });
 
-const chartOptions = ref<ChartOptions>({ 
+const chartOptions = ref<ChartOptions>({
   responsive: true,
   maintainAspectRatio: false,
   plugins: {
@@ -314,4 +314,3 @@ h1, h2 {
   background-color: #fff;
 }
 </style>
-''

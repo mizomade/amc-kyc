@@ -112,7 +112,7 @@
 import { ref, onMounted, reactive, watch } from 'vue';
 import { useNuxtApp } from '#app';
 import { Chart, registerables } from 'chart.js';
-import 'chartjs-adapter-date-fns';
+
 
 Chart.register(...registerables);
 
