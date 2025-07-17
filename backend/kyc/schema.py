@@ -304,3 +304,17 @@ class AttachmentCreate(BaseModel):
 class AttachmentUpdate(BaseModel):
     document_type_id: Optional[int] = None
     remarks: Optional[str] = None
+
+
+class PersonalQualificationEntry(BaseModel):
+    person_id: int
+    education_id: int
+    year_of_passing: Optional[int] = None
+    institution_name: Optional[str] = None
+    grade_or_marks: Optional[str] = None
+    certificate_number: Optional[str] = None
+    remarks: Optional[str] = None
+
+# Bulk submission schema (list of entries)
+class BulkPersonalQualificationCreate(BaseModel):
+    qualifications: List[PersonalQualificationEntry]

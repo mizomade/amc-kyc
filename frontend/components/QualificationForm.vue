@@ -1,76 +1,176 @@
 <template>
-  <form @submit.prevent="submitForm" class="space-y-6">
-    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-      <div>
-        <label for="education_id" class="block text-sm font-medium text-gray-700">Education</label>
-        <select id="education_id" v-model="qualificationData.education_id"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm">
-          <option v-for="education in educations" :key="education.id" :value="education.id">{{ education.name }}</option>
-        </select>
-      </div>
-      <div>
-        <label for="year_of_passing" class="block text-sm font-medium text-gray-700">Year of Passing</label>
-        <input type="number" id="year_of_passing" v-model="qualificationData.year_of_passing"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-      </div>
-      <div>
-        <label for="institution_name" class="block text-sm font-medium text-gray-700">Institution Name</label>
-        <input type="text" id="institution_name" v-model="qualificationData.institution_name"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-      </div>
-      <div>
-        <label for="grade_or_marks" class="block text-sm font-medium text-gray-700">Grade/Marks</label>
-        <input type="text" id="grade_or_marks" v-model="qualificationData.grade_or_marks"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-      </div>
-      <div>
-        <label for="certificate_number" class="block text-sm font-medium text-gray-700">Certificate Number</label>
-        <input type="text" id="certificate_number" v-model="qualificationData.certificate_number"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
-      </div>
-      <div>
-        <label for="remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
-        <input type="text" id="remarks" v-model="qualificationData.remarks"
-          class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
+  <div>
+    <div
+      v-for="(qualification, index) in qualifications"
+      :key="index"
+      class="mb-6 p-4 border rounded space-y-4 relative"
+    >
+      <h3 class="font-semibold text-lg">Qualification {{ index + 1 }}</h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Education</label>
+          <select
+            v-model="qualification.education_id"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          >
+            <option v-for="education in educationOptions" :key="education.id" :value="education.id">
+              {{ education.name }}
+            </option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Year of Passing</label>
+          <input
+            type="number"
+            v-model="qualification.year_of_passing"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Institution Name</label>
+          <input
+            type="text"
+            v-model="qualification.institution_name"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Grade / Marks</label>
+          <input
+            type="text"
+            v-model="qualification.grade_or_marks"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Certificate Number</label>
+          <input
+            type="text"
+            v-model="qualification.certificate_number"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+
+        <div>
+          <label class="block text-sm font-medium text-gray-700">Remarks</label>
+          <input
+            type="text"
+            v-model="qualification.remarks"
+            class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+
       </div>
     </div>
-    <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-      <button type="submit" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-base font-medium text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm">
-        Save
+
+    <div class="flex flex-col gap-4 mt-6">
+      <button
+        type="button"
+        @click="addQualificationForm"
+        class="w-full inline-flex justify-center rounded-md border border-dashed border-gray-400 px-4 py-2 text-gray-700 hover:bg-gray-100"
+      >
+        + Add More
       </button>
+
+        <button
+          type="button"
+          @click="submitAllQualifications"
+          :disabled="isSubmitDisabled"
+          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-600 text-white font-medium hover:bg-blue-700 disabled:opacity-50"
+        >
+          Save All Qualifications
+        </button>
+
     </div>
-  </form>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, computed, watch } from 'vue'
+import { useNuxtApp } from '#app'
+import { usePersonStore } from '@/stores/person'
 
-const emit = defineEmits(['submit']);
+const { $api } = useNuxtApp()
+const personStore = usePersonStore()
+const emit = defineEmits(['saved'])
+// Get person_id directly from Pinia
+const personId = computed(() => personStore.person_id)
 
-const educations = ref([]);
-const qualificationData = ref({
-  education_id: null,
-  year_of_passing: null,
-  institution_name: '',
-  grade_or_marks: '',
-  certificate_number: '',
-  remarks: '',
-});
+// Disable the save button if person_id missing
+const isSubmitDisabled = computed(() => !personId.value)
 
-const fetchEducations = async () => {
-  try {
-    const response = await $fetch('http://localhost:8000/api/qualifications/');
-    educations.value = response;
-  } catch (error) {
-    console.error('Error fetching educations:', error);
+const educationOptions = ref([])
+const qualifications = ref([createEmptyQualification()])
+
+function createEmptyQualification() {
+  return {
+    education_id: null,
+    year_of_passing: '',
+    institution_name: '',
+    grade_or_marks: '',
+    certificate_number: '',
+    remarks: ''
   }
-};
+}
 
-const submitForm = () => {
-  emit('submit', qualificationData.value);
-};
+const fetchEducationOptions = async () => {
+  try {
+    const response = await $api.get('/qualifications/')
+    educationOptions.value = response.data
+  } catch (error) {
+    console.error('Failed to fetch education options:', error)
+  }
+}
 
-onMounted(() => {
-  fetchEducations();
-});
+const addQualificationForm = () => {
+  qualifications.value.push(createEmptyQualification())
+}
+
+const submitAllQualifications = async () => {
+  if (!personId.value) {
+    alert('Person ID missing. Please save personal details first.')
+    return
+  }
+
+  const payload = {
+    qualifications: qualifications.value.map((qualification) => ({
+      person_id: personId.value,
+      education_id: qualification.education_id,
+      year_of_passing: qualification.year_of_passing,
+      institution_name: qualification.institution_name,
+      grade_or_marks: qualification.grade_or_marks,
+      certificate_number: qualification.certificate_number,
+      remarks: qualification.remarks
+    }))
+  }
+
+  console.log('Payload:', payload)
+  try {
+    await $api.post('/qualifications/bulk/', payload)
+    alert('All qualifications saved successfully.')
+
+    emit('saved')  // 🔥 EMIT HERE after success
+
+  } catch (error) {
+    console.error('Bulk qualification save failed:', error)
+    alert('Failed to save qualifications.')
+  }
+}
+
+
+onMounted(fetchEducationOptions)
+
+// Optional debug: watch personId changes
+watch(personId, (newId) => {
+  if (newId) {
+    console.log('🟢 person_id available:', newId)
+  }
+})
 </script>
+

@@ -2,12 +2,35 @@ from ninja import Router
 from core.models import Education
 from core.schema import EducationSchema
 from kyc.models import PersonalQualification
-from kyc.schema import PersonalQualificationCreate, PersonalQualificationUpdate
+from kyc.schema import PersonalQualificationCreate, PersonalQualificationUpdate, BulkPersonalQualificationCreate
 from django.http import Http404
 from typing import List
 
 router = Router(tags=['Personal Qualifications'])
 
+
+
+router = Router(tags=['Personal Qualifications'])
+
+@router.post("/bulk/", summary="Bulk create personal qualifications")
+def create_bulk_personal_qualifications(request, data: BulkPersonalQualificationCreate):
+    created_ids = []
+    for item in data.qualifications:
+        qualification = PersonalQualification.objects.create(
+            person_id=item.person_id,
+            education_id=item.education_id,
+            year_of_passing=item.year_of_passing,
+            institution_name=item.institution_name,
+            grade_or_marks=item.grade_or_marks,
+            certificate_number=item.certificate_number,
+            remarks=item.remarks,
+        )
+        created_ids.append(qualification.id)
+
+    return {
+        "created_ids": created_ids,
+        "message": f"{len(created_ids)} personal qualifications created successfully"
+    }
 
 @router.get("/", response=List[EducationSchema], summary="List all  qualifications")
 def list_all_qualifications(request):

@@ -1,24 +1,43 @@
 import { defineStore } from 'pinia';
+import { useNuxtApp } from '#app';   // Required if injecting api here (alternative below)
 
 export const useHouseStore = defineStore('house', {
   state: () => ({
-    house: null,
-    members: [],
+    house_id: null,
+    house_details: {},
+    members: []
   }),
+
   actions: {
-    setHouse(houseData) {
-      this.house = houseData;
+    setHouseId(id) {
+      this.house_id = id;
     },
-    addMember(memberData) {
-      this.members.push(memberData);
+
+    setHouseDetails(details) {
+      this.house_details = details;
     },
-    async fetchMembers(houseId) {
+
+    addMember(member) {
+      this.members.push(member);
+    },
+
+    clearHouse() {
+      this.house_id = null;
+      this.house_details = {};
+      this.members = [];
+    },
+
+    // Fetch members from API
+    async fetchMembers($api) {
+      if (!this.house_id) return;
+
       try {
-        const response = await $fetch(`http://localhost:8000/api/house/${houseId}/members`);
-        this.members = response;
+        const response = await $api.get(`/house/${this.house_id}/members/`);
+        this.members = response.data;
       } catch (error) {
-        console.error('Error fetching members:', error);
+        console.error('Failed to fetch house members:', error);
+        this.members = [];
       }
-    },
-  },
+    }
+  }
 });

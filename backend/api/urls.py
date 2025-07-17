@@ -16,6 +16,8 @@ from .denomination import router as denomination_router
 from .role import router as role_router
 
 from .reports import router as reports_router
+from api.forentry import router as forentry_router
+from api.documenttypelist import router as documenttypelist_router
 
 
 
@@ -37,6 +39,13 @@ api.add_router("/user/", user_router)
 api.add_router("/religion/", religion_router)
 api.add_router("/denomination/", denomination_router)
 api.add_router("/role/", role_router)
+
+
+
+api.add_router("/documentypelist/",documenttypelist_router)
+
+api.add_router("/forentry/",forentry_router)
+
 
 
 
