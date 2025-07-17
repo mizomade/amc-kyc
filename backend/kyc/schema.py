@@ -52,7 +52,7 @@ class PersonListOut(BaseModel):
     mother_name: Optional[str] = None
     photo_url: Optional[str] = None
     age: Optional[int]
-
+#test
 class PersonSearchOut(BaseModel):
     id: int
     name: str
