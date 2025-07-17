@@ -1,5 +1,5 @@
 <template>
-  <nav class="bg-white shadow-md fixed w-full z-20">
+  <nav class="bg-white  fixed w-full z-20">
     <div class="container mx-auto px-6 py-3 flex justify-between items-center">
       <NuxtLink to="/" class="text-xl font-bold text-blue-600">KYC</NuxtLink>
       <div class="flex items-center space-x-4">

@@ -1,15 +1,19 @@
 <template>
-  <div class="flex min-h-screen bg-gray-100">
     <Sidebar ref="sidebarRef" />
+
+  <div class="flex min-h-screen bg-gray-100">
     <main :style="mainContentStyle" class="flex-1 p-6 transition-all duration-300">
       <slot />
     </main>
   </div>
+
+  <Footer class="pl-20" />
 </template>
 
 <script setup>
 import { ref, computed } from 'vue';
 import Sidebar from '~/components/sidebar.vue';
+import Footer from '~/components/Footer.vue';
 
 const sidebarRef = ref(null);
 

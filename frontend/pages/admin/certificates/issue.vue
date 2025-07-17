@@ -28,9 +28,10 @@
 
 <script setup>
 import { ref, onMounted, nextTick } from 'vue';
-import { useRoute } from 'vue-router';
+import { useRoute ,useRouter} from 'vue-router';
 import { useNuxtApp } from '#app';
 import 'quill/dist/quill.snow.css';
+const router = useRouter();
 
 
 definePageMeta({
