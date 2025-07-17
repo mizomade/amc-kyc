@@ -19,6 +19,7 @@ from .reports import router as reports_router
 from api.education import router as education_router
 from api.occupationlist import router as occuaptionlist_router
 from api.documenttypelist import router as documenttypelist_router
+from api.forentry import router as forentry_router
 api = NinjaAPI()
 
 api.add_router("/person/", person_router)
@@ -40,4 +41,5 @@ api.add_router("/role/", role_router)
 api.add_router("/education/", education_router)
 api.add_router("/occupationlist/",occuaptionlist_router)
 api.add_router("/documentypelist/",documenttypelist_router)
+api.add_router("/forentry/",forentry_router)
 urlpatterns = api._get_urls()
