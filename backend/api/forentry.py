@@ -376,7 +376,7 @@ def calculate_age(dob):
 
 
 #Person Seach na tur plus filtering
-@router.get("/person/", response=List[PersonOut])
+@router.get("/search/", response=List[PersonOut])
 def search_person(
     request,
     search: str = None,

@@ -178,7 +178,7 @@ async function fetchPersons() {
     if (selectedAge.value) params.age_group = selectedAge.value
     if (selectedOccupation.value) params.occupation = selectedOccupation.value
 
-    const res = await $api.get('/search/person/', { params })
+    const res = await $api.get('/forentry/search/', { params })
     persons.value = res.data.reverse()
   } catch (err) {
     console.error('Failed to load persons:', err)
