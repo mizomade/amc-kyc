@@ -1,145 +1,14 @@
-from ninja import Router
-from django.db.models import Q
-from kyc.models import Person,House
+from ninja import Router,Form,File
+from django.db.models import Q,F
+from kyc.models import Person,House,Religion,Denomination,Role
 from typing import List,Optional
 from pydantic import BaseModel
-from kyc.schema import PersonOut, PersonSearchOut
 from datetime import date
+from django.http import Http404
+from ninja.errors import HttpError
+from ninja.files import UploadedFile
 router = Router(tags=['Search'])
 router = Router()
-
-def calculate_age(dob):
-    if not dob:
-        return None
-    today = date.today()
-    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
-
-
-#Person Seach na tur plus filtering
-@router.get("/person/", response=List[PersonOut])
-def search_person(
-    request,
-    search: str = None,
-    occupation: str = None,   
-    age_group: str = None,    
-    id: int = None,
-):
-    queryset = Person.objects.select_related("house", "father", "mother").prefetch_related("occupations__occupation").all()
-
-    if search:
-        queryset = queryset.filter(
-            Q(first_name__icontains=search) |
-            Q(hnam_hming__icontains=search) |
-            Q(epic_number__icontains=search) |
-            Q(aadhar_number__icontains=search) |
-            Q(house__house_number__icontains=search) |
-            Q(mobile__icontains=search) |
-            Q(dob__icontains=search)
-        )
-
-    if occupation:
-        queryset = queryset.filter(occupations__occupation__name__iexact=occupation)
-
-    if age_group:
-        from datetime import date, timedelta
-
-        today = date.today()
-        age_ranges = {
-            "0-18": (today - timedelta(days=18*365), today),
-            "18-35": (today - timedelta(days=35*365), today - timedelta(days=18*365)),
-            "35-60": (today - timedelta(days=60*365), today - timedelta(days=35*365)),
-            "60 above": (None, today - timedelta(days=60*365)),
-        }
-
-        min_date, max_date = age_ranges.get(age_group, (None, None))
-
-        if min_date and max_date:
-            queryset = queryset.filter(dob__range=(min_date, max_date))
-        elif max_date:
-            queryset = queryset.filter(dob__lte=max_date)
-
-    if id:
-        queryset = queryset.filter(id=id)
-
-    return [
-        PersonOut(
-            id=person.id,
-            first_name=person.first_name,
-            hnam_hming=person.hnam_hming,
-            epic_number=person.epic_number,
-            dob=person.dob.isoformat() if person.dob else None,
-            aadhar_number=person.aadhar_number,
-            house_number=person.house.house_number if person.house else None,
-            mobile=person.mobile,
-            father_name=f"{person.father.first_name} {person.father.hnam_hming}" if person.father else None,
-            mother_name=f"{person.mother.first_name} {person.mother.hnam_hming}" if person.mother else None,
-            photo_url=request.build_absolute_uri(person.photo.url) if person.photo and person.photo.name else None,
-            age=calculate_age(person.dob),
-            occupations=[po.occupation.name for po in person.occupations.all()],
-        )
-        for person in queryset[:50]
-    ]
-
-
-
-#Father search na fate regitered dawn a pa ber awlsam deuha search na , house_id mil zel in awmzia chu family member dang house dang ami a rawn lang dawnlo tihna
-@router.get("/father/", summary="Search for father candidates in the same house")
-def search_father(request, house_id: int, name: str = None):
-    queryset = Person.objects.filter(house_id=house_id, gender="Male")
-
-    if name:
-        queryset = queryset.filter(
-            Q(first_name__icontains=name) | Q(hnam_hming__icontains=name)
-        )
-
-    return [
-        {
-            "id": person.id,
-            "first_name": person.first_name,
-            "hnam_hming": person.hnam_hming
-        }
-        for person in queryset[:20]
-    ]
-
-
-
-#chutiang chiah in hetah pawh mother bik search na a ni tawp mai
-@router.get("/mother/", summary="Search for mother candidates in the same house")
-def search_mother(request, house_id: int, name: str = None):
-    queryset = Person.objects.filter(house_id=house_id, gender="Female")
-
-    if name:
-        queryset = queryset.filter(
-            Q(first_name__icontains=name) | Q(hnam_hming__icontains=name)
-        )
-
-    return [
-        {
-            "id": person.id,
-            "first_name": person.first_name,
-            "hnam_hming": person.hnam_hming
-        }
-        for person in queryset[:20]
-    ]
-
-
-#House search na;
-#Hmanna tur chu House tamtak and register tawh chuan dropdown ah zawn abuaithllk dawn avangin searchable dropdown frontend ah kan siam anga chumi chuan hemi endpoint hi a connect ang
-@router.get("/house/", summary="Search houses by house number for parent house")
-def search_house(request, search: str = None):
-    queryset = House.objects.all()
-
-    if search:
-        queryset = queryset.filter(house_number__icontains=search)
-
-    return [
-        {
-            "id": house.id,
-            "house_number": house.house_number
-        }
-        for house in queryset[:20]
-    ]
-
 
 
 class PersonCreate(BaseModel):
@@ -173,7 +42,7 @@ class PersonOut(BaseModel):
     father_name: Optional[str] = None
     mother_name: Optional[str] = None
     photo_url: Optional[str] = None
-    age: Optional[int]
+    age: Optional[int] = None
     occupations: List[str] = []
     class Config:
         orm_mode = True
@@ -316,3 +185,351 @@ class AttachmentUpdate(BaseModel):
 class OccupationOut(BaseModel):
     id: int
     name: str
+
+
+
+@router.post("/house/", summary="Create a new house")
+def create_house(request, data: HouseCreate):
+    house = House.objects.create(
+        house_number=data.house_number,
+        parent_house_id=data.parent_house_id,
+        veng_id=data.veng_id,
+        street=data.street,
+        landmarks=data.landmarks,
+        is_owner=data.is_owner,
+        lsc_number=data.lsc_number,
+        awmtan_kum=data.awmtan_kum,
+        pem_luh_chhan=data.pem_luh_chhan,
+        have_tenant=data.have_tenant,
+        household_size=data.household_size,
+        is_tenant=data.is_tenant,
+        landlord_name=data.landlord_name,
+        landlord_phone=data.landlord_phone,
+        landlord_veng=data.landlord_veng,
+        latitude=data.latitude,
+        longitude=data.longitude,
+    )
+    return {"id": house.id, "message": "House created successfully"}
+
+
+
+@router.get("/", summary="Get list of all houses")
+def list_houses(request):
+    return [{"id": h.id, "house_number": h.house_number} for h in House.objects.all()]
+
+
+
+@router.get("/{house_id}/members/", response=List[PersonOut], summary="Get all persons in a house")
+def list_house_members(request, house_id: int):
+    try:
+        house = House.objects.get(id=house_id)
+    except House.DoesNotExist:
+        raise Http404("House not found")
+
+    return list(Person.objects.filter(house=house).values())
+
+# person
+@router.post("/person/", summary="Create a new person")
+def create_person(
+    request,
+    first_name: str = Form(...),
+    hnam_hming: Optional[str] = Form(None),
+    gender: str = Form(...),
+    dob: Optional[str] = Form(None),
+    blood_group: Optional[str] = Form(None),
+    mobile: Optional[str] = Form(None),
+    epic_number: Optional[str] = Form(None),
+    aadhar_number: Optional[str] = Form(None),
+    marital_status: Optional[str] = Form(None),
+    father_id: Optional[int] = Form(None),
+    mother_id: Optional[int] = Form(None),
+    spouse_id: Optional[int] = Form(None),
+    house_id: Optional[int] = Form(None),
+    religion_id: Optional[int] = Form(None),
+    denomination_id: Optional[int] = Form(None),
+    photo: Optional[UploadedFile] = File(None),
+    rent_start_date: Optional[str] = Form(None),
+    rent_end_date: Optional[str] = Form(None),
+):
+    # Uniqueness checks
+    if epic_number and Person.objects.filter(epic_number=epic_number).exists():
+        raise HttpError(400, "EPIC number must be unique")
+    if aadhar_number and Person.objects.filter(aadhar_number=aadhar_number).exists():
+        raise HttpError(400, "Aadhar number must be unique")
+
+    person = Person.objects.create(
+        first_name=first_name,
+        hnam_hming=hnam_hming or None,
+        gender=gender,
+        dob=dob or None,
+        blood_group=blood_group or None,
+        mobile=mobile or None,
+        epic_number=epic_number or None,
+        aadhar_number=aadhar_number or None,
+        marital_status=marital_status or None,
+        father_id=father_id,
+        mother_id=mother_id,
+        spouse_id=spouse_id,
+        house_id=house_id,
+        religion_id=religion_id,
+        denomination_id=denomination_id,
+        photo=photo if photo else None,
+        rent_start_date=rent_start_date or None,
+        rent_end_date=rent_end_date or None,  
+    )
+
+    return {"id": person.id, "message": "Person created successfully"}
+
+
+
+
+@router.put("/update/{person_id}", summary="Update a person")
+def update_person(request, person_id: int, data: PersonUpdate):
+    try:
+        person = Person.objects.get(id=person_id)
+    except Person.DoesNotExist:
+        raise Http404("Person not found")
+
+    update_data = data.dict(exclude_unset=True)
+    foreign_keys = {
+        "father": Person,
+        "mother": Person,
+        "spouse": Person,
+        "house": House,
+        "religion": Religion,
+        "denomination": Denomination,
+        "role": Role,
+    }
+
+    for field, model in foreign_keys.items():
+        if field in update_data:
+            fk_id = update_data.pop(field)
+            if fk_id is not None:
+                try:
+                    setattr(person, field, model.objects.get(id=fk_id))
+                except model.DoesNotExist:
+                    raise Http404(f"{field.capitalize()} with id {fk_id} not found")
+            else:
+                setattr(person, field, None)
+
+    for attr, value in update_data.items():
+        setattr(person, attr, value)
+
+    person.save()
+    return {"message": "Person updated successfully"}
+
+@router.delete("/delete/{person_id}", summary="Delete a person")
+def delete_person(request, person_id: int):
+    try:
+        person = Person.objects.get(id=person_id)
+        person.delete()
+        return {"message": "Person deleted successfully"}
+    except Person.DoesNotExist:
+        raise Http404("Person not found")
+
+@router.get("/persons/", response=List[PersonListOut])
+def list_persons(request, search: Optional[str] = None):
+    queryset = Person.objects.select_related("house", "father", "mother").annotate(
+        house_number=F("house__house_number"),
+        father_name=F("father__first_name"),
+        mother_name=F("mother__first_name"),
+        photo_url=F("photo"),
+    )
+
+    # If search is provided, filter by first_name or hnam_hming
+    if search:
+        queryset = queryset.filter(
+            Q(first_name__icontains=search) | Q(hnam_hming__icontains=search)
+        )
+
+    person_list = list(queryset.values(
+        "id", "first_name", "hnam_hming", "epic_number", "aadhar_number",
+        "house_number", "mobile", "father_name", "mother_name", "photo_url", "dob"
+    ))
+
+    # Convert image field to absolute URL
+    for person in person_list:
+        if person["photo_url"]:
+            person["photo_url"] = request.build_absolute_uri(person["photo_url"])
+            # Calculate age
+        dob = person["dob"]
+        if dob:
+            today = date.today()
+            person["age"] = today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+        else:
+            person["age"] = None
+
+    return person_list
+
+
+
+
+def calculate_age(dob):
+    if not dob:
+        return None
+    today = date.today()
+    return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
+
+
+
+
+
+
+#Person Seach na tur plus filtering
+@router.get("/person/", response=List[PersonOut])
+def search_person(
+    request,
+    search: str = None,
+    occupation: str = None,   
+    age_group: str = None,    
+    id: int = None,
+):
+    queryset = Person.objects.select_related("house", "father", "mother").prefetch_related("occupations__occupation").all()
+
+    if search:
+        queryset = queryset.filter(
+            Q(first_name__icontains=search) |
+            Q(hnam_hming__icontains=search) |
+            Q(epic_number__icontains=search) |
+            Q(aadhar_number__icontains=search) |
+            Q(house__house_number__icontains=search) |
+            Q(mobile__icontains=search) |
+            Q(dob__icontains=search)
+        )
+
+    if occupation:
+        queryset = queryset.filter(occupations__occupation__name__iexact=occupation)
+
+    if age_group:
+        from datetime import date, timedelta
+
+        today = date.today()
+        age_ranges = {
+            "0-18": (today - timedelta(days=18*365), today),
+            "18-35": (today - timedelta(days=35*365), today - timedelta(days=18*365)),
+            "35-60": (today - timedelta(days=60*365), today - timedelta(days=35*365)),
+            "60 above": (None, today - timedelta(days=60*365)),
+        }
+
+        min_date, max_date = age_ranges.get(age_group, (None, None))
+
+        if min_date and max_date:
+            queryset = queryset.filter(dob__range=(min_date, max_date))
+        elif max_date:
+            queryset = queryset.filter(dob__lte=max_date)
+
+    if id:
+        queryset = queryset.filter(id=id)
+
+    return [
+        PersonOut(
+            id=person.id,
+            first_name=person.first_name,
+            hnam_hming=person.hnam_hming,
+            epic_number=person.epic_number,
+            dob=person.dob.isoformat() if person.dob else None,
+            aadhar_number=person.aadhar_number,
+            house_number=person.house.house_number if person.house else None,
+            mobile=person.mobile,
+            father_name=f"{person.father.first_name} {person.father.hnam_hming}" if person.father else None,
+            mother_name=f"{person.mother.first_name} {person.mother.hnam_hming}" if person.mother else None,
+            photo_url=request.build_absolute_uri(person.photo.url) if person.photo and person.photo.name else None,
+            age=calculate_age(person.dob),
+            occupations=[po.occupation.name for po in person.occupations.all()],
+        )
+        for person in queryset[:50]
+    ]
+
+
+
+#Father search na fate regitered dawn a pa ber awlsam deuha search na , house_id mil zel in awmzia chu family member dang house dang ami a rawn lang dawnlo tihna
+@router.get("/father/", summary="Search for father candidates in the same house")
+def search_father(request, house_id: int, name: str = None):
+    queryset = Person.objects.filter(house_id=house_id, gender="Male")
+
+    if name:
+        queryset = queryset.filter(
+            Q(first_name__icontains=name) | Q(hnam_hming__icontains=name)
+        )
+
+    return [
+        {
+            "id": person.id,
+            "first_name": person.first_name,
+            "hnam_hming": person.hnam_hming
+        }
+        for person in queryset[:20]
+    ]
+
+
+
+#chutiang chiah in hetah pawh mother bik search na a ni tawp mai
+@router.get("/mother/", summary="Search for mother candidates in the same house")
+def search_mother(request, house_id: int, name: str = None):
+    queryset = Person.objects.filter(house_id=house_id, gender="Female")
+
+    if name:
+        queryset = queryset.filter(
+            Q(first_name__icontains=name) | Q(hnam_hming__icontains=name)
+        )
+
+    return [
+        {
+            "id": person.id,
+            "first_name": person.first_name,
+            "hnam_hming": person.hnam_hming
+        }
+        for person in queryset[:20]
+    ]
+
+
+#House search na;
+#Hmanna tur chu House tamtak and register tawh chuan dropdown ah zawn abuaithllk dawn avangin searchable dropdown frontend ah kan siam anga chumi chuan hemi endpoint hi a connect ang
+@router.get("/house/", summary="Search houses by house number for parent house")
+def search_house(request, search: str = None):
+    queryset = House.objects.all()
+
+    if search:
+        queryset = queryset.filter(house_number__icontains=search)
+
+    return [
+        {
+            "id": house.id,
+            "house_number": house.house_number
+        }
+        for house in queryset[:20]
+    ]
+
+
+#House enna tur citizenlist ami
+@router.get("/houses/", response=list[HouseOut])
+def list_houses(request):
+    houses = House.objects.all()
+    results = []
+
+    for house in houses:
+        first_member = Person.objects.filter(house=house).first()
+        head_name = (
+            f"{first_member.first_name} {first_member.hnam_hming or ''}".strip()
+            if first_member else None
+        )
+
+        results.append({
+            "id": house.id,
+            "house_number": house.house_number,
+            "veng_name": house.veng.name if house.veng else None,
+            "is_owner": house.is_owner,
+            "head_name": head_name,
+        })
+
+    return results
+
+
+@router.delete("/delete/{person_id}", summary="Delete a person")
+def delete_person(request, person_id: int):
+    try:
+        person = Person.objects.get(id=person_id)
+        person.delete()
+        return {"message": "Person deleted successfully"}
+    except Person.DoesNotExist:
+        raise Http404("Person not found")

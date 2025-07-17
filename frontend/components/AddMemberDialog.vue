@@ -336,7 +336,7 @@ const searchFather = async () => {
   }
   try {
     const response = await $api.get(
-      `/search/father/?house_id=${houseStore.house_id}&name=${fatherSearchText.value}`
+      `/forentry/father/?house_id=${houseStore.house_id}&name=${fatherSearchText.value}`
     )
     fatherOptions.value = response.data
   } catch (error) {
@@ -351,7 +351,7 @@ const searchMother = async () => {
   }
   try {
     const response = await $api.get(
-      `/search/mother/?house_id=${houseStore.house_id}&name=${motherSearchText.value}`
+      `/forentry/mother/?house_id=${houseStore.house_id}&name=${motherSearchText.value}`
     )
     motherOptions.value = response.data
   } catch (error) {
@@ -430,7 +430,7 @@ const submitPersonalDetails = async () => {
   formData.append('is_househead', memberData.value.is_househead ? 'true' : 'false')
 
   try {
-    const response = await $api.post('/person/', formData, {
+    const response = await $api.post('/forentry/person/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 
@@ -460,7 +460,7 @@ const handleDocumentFormClose = () => {
 const fetchHouseMembers = async () => {
   if (!houseStore.house_id) return;
   try {
-    const response = await $api.get(`/house/${houseStore.house_id}/members/`);
+    const response = await $api.get(`/forentry/${houseStore.house_id}/members/`);
     houseStore.members = response.data;   // ✅ Shared via Pinia
   } catch (error) {
     console.error('Failed to fetch members:', error);

@@ -78,7 +78,7 @@ const submit = async () => {
   }
 
   try {
-    const response = await $api.post('/person/', formData, {
+    const response = await $api.post('/forentry/person/', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
     })
 

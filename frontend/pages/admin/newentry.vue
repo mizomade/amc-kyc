@@ -244,7 +244,7 @@ const houseData = ref({
 
 const submitHouseForm = async () => {
   try {
-    const response = await $api.post('/house/', houseData.value);
+    const response = await $api.post('/forentry/house/', houseData.value);
 
     houseStore.house_id = response.data.id;
 
@@ -262,7 +262,7 @@ const fetchMembers = async () => {
   if (!houseStore.house_id) return;
 
   try {
-    const response = await $api.get(`/house/${houseStore.house_id}/members/`);
+    const response = await $api.get(`/forentry/${houseStore.house_id}/members/`);
     houseStore.members = response.data;  // Update members in Pinia store
   } catch (error) {
     console.error('Failed to fetch members:', error);
@@ -284,7 +284,7 @@ function fetchHouseOptions() {
     return;
   }
 
-  $api.get('/search/house/', {
+  $api.get('/forentry/house/', {
     params: { search: selectedParentHouseText.value }
   })
     .then((response) => {

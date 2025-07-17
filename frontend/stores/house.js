@@ -32,7 +32,7 @@ export const useHouseStore = defineStore('house', {
       if (!this.house_id) return;
 
       try {
-        const response = await $api.get(`/house/${this.house_id}/members/`);
+        const response = await $api.get(`/forentry/${this.house_id}/members/`);
         this.members = response.data;
       } catch (error) {
         console.error('Failed to fetch house members:', error);

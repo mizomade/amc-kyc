@@ -201,7 +201,7 @@ watch(searchTerm, () => {
 
 async function fetchHouses() {
   try {
-    const res = await $api.get('/person/houses/')
+    const res = await $api.get('/forentry/houses/')
     houses.value = res.data
   } catch (err) {
     console.error('Failed to load houses:', err)
@@ -220,7 +220,7 @@ watch(searchTerm, (val) => {
 async function confirmDelete(personId) {
   if (confirm("Are you sure you want to delete this person?")) {
     try {
-      await $api.delete(`/person/delete/${personId}`)
+      await $api.delete(`/forentry/delete/${personId}`)
     
       persons.value = persons.value.filter(p => p.id !== personId)
     } catch (err) {
