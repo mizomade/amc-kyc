@@ -28,9 +28,9 @@ def get_person(request, person_id: int):
     # Manually serialize related managers to lists and photo to URL
     person_data = {
         **person.__dict__,
-        "qualifications": list(person.qualifications.all()),
-        "occupations": list(person.occupations.all()),
-        "attachments": list(person.attachments.all()),
+        "qualifications": [{"id": q.id, "education": q.education, "year_of_passing": q.year_of_passing, "institution_name": q.institution_name, "grade_or_marks": q.grade_or_marks, "certificate_number": q.certificate_number, "remarks": q.remarks} for q in person.qualifications.all()],
+        "occupations": [{"id": o.id, "occupation": o.occupation, "employer_name": o.employer_name, "position_title": o.position_title, "start_date": o.start_date, "end_date": o.end_date, "remarks": o.remarks} for o in person.occupations.all()],
+        "attachments": [{"id": a.id, "document_type": a.document_type, "file": a.file.url if a.file else None, "remarks": a.remarks, "uploaded_at": a.uploaded_at} for a in person.attachments.all()],
         "photo": person.photo.url if person.photo else None,
     }
     # Handle related objects that are not automatically serialized by Pydantic from __dict__

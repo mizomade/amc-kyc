@@ -177,7 +177,7 @@ const rentStartTrendData = computed<ChartData<'line'>>(() => {
   return {
     labels: labels,
     datasets: [{
-      label: 'Houses Rent Start',
+      label: 'Awm tan kum',
       data: data,
       fill: false,
       borderColor: '#9C27B0',

@@ -40,6 +40,9 @@
           <DetailItem label="Mother" :value="person.mother ? person.mother.first_name + ' ' + (person.mother.hnam_hming || '') : 'N/A'" />
           <DetailItem label="Spouse" :value="person.spouse ? person.spouse.first_name + ' ' + (person.spouse.hnam_hming || '') : 'N/A'" />
         </div>
+        <button  class="mt-4 inline-flex items-center px-4 py-2 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700">
+          Show Family Tree
+        </button>
       </div>
 
       <!-- House Details Card -->
@@ -125,8 +128,13 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-4">
               <DetailItem label="Document Type" :value="attachment.document_type.name" />
               <DetailItem label="File">
-                <a :href="attachment.file" target="_blank" class="text-blue-600 hover:underline font-medium">View Document</a>
-              </DetailItem>
+<a
+  :href="`http://localhost:8000${attachment.file}`"
+  target="_blank"
+  class="text-blue-600 hover:underline font-medium"
+>
+  View Document
+</a>              </DetailItem>
               <DetailItem label="Remarks" :value="attachment.remarks" />
               <DetailItem label="Uploaded At" :value="attachment.uploaded_at" />
             </div>

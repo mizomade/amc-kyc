@@ -11,6 +11,8 @@ https://docs.djangoproject.com/en/5.2/ref/settings/
 """
 
 from pathlib import Path
+from decouple import config
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -45,6 +47,7 @@ INSTALLED_APPS = [
 
     'rest_framework',
     'rest_framework_simplejwt',
+    'storages'
 ]
 
 REST_FRAMEWORK = {
@@ -137,6 +140,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+MEDIA_URL = 'media/'
+MEDIA_ROOT = BASE_DIR / 'media'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -144,3 +149,27 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 AUTH_USER_MODEL = 'core.User'
+
+
+# AWS_ACCESS_KEY_ID = config('AWS_ACCESS_KEY_ID')
+# AWS_SECRET_ACCESS_KEY = config('AWS_SECRET_ACCESS_KEY')
+# AWS_STORAGE_BUCKET_NAME = config('AWS_STORAGE_BUCKET_NAME')
+# AWS_S3_REGION_NAME = config('AWS_S3_REGION_NAME', default='ap-south-1')
+# AWS_S3_FILE_OVERWRITE = False
+# AWS_DEFAULT_ACL = None
+# AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.{AWS_S3_REGION_NAME}.amazonaws.com'
+# MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+# STATIC_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/static/'
+
+
+# STORAGES = {
+#     'default': {
+#         'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+#     },
+#     'staticfiles': {
+#         'BACKEND': 'storages.backends.s3boto3.S3Boto3Storage',
+#         'OPTIONS': {
+#             'location': 'static/',
+#         },
+#     },
+# }

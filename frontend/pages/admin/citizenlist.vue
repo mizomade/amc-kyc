@@ -133,7 +133,7 @@
   </thead>
   <tbody class="bg-white divide-y divide-gray-200">
     <tr v-for="house in houses" :key="house.id" class="hover:bg-blue-50 cursor-pointer transition" @click="router.push(`/admin/house/${house.id}`)">
-      <td class="px-6 py-4 text-sm text-gray-900">{{ house.house_number }} {{ house.id }}</td>
+      <td class="px-6 py-4 text-sm text-gray-900">{{ house.house_number }} </td>
       <td class="px-6 py-4 text-sm text-gray-500">{{ house.head_name || '—' }}</td>
       <td class="px-6 py-4 text-sm text-gray-500">{{ house.veng_name }}</td>
         <td class="px-6 py-4 text-sm text-gray-500">
