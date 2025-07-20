@@ -18,6 +18,7 @@ from .role import router as role_router
 from .reports import router as reports_router
 from api.forentry import router as forentry_router
 from api.documenttypelist import router as documenttypelist_router
+from .treev3 import family_tree_router as tree_view3
 
 
 
@@ -45,6 +46,9 @@ api.add_router("/role/", role_router)
 api.add_router("/documentypelist/",documenttypelist_router)
 
 api.add_router("/forentry/",forentry_router)
+
+
+api.add_router("/family-tree-v3/", tree_view3)
 
 
 
