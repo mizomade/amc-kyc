@@ -83,8 +83,9 @@ const clientReady = ref(false)
 const mapCenter = computed(() =>
   props.latitude && props.longitude
     ? [props.latitude, props.longitude]
-    : [20.5937, 78.9629] // Default: India
+    : [23.7358, 92.7164]      // zarkawt
 )
+
 
 watch(
   () => props.show,
@@ -106,6 +107,7 @@ onMounted(() => {
 function onMapClick(e) {
   marker.value = e.latlng
   getAddress(e.latlng.lat, e.latlng.lng)
+  emit('selected', { lat: e.latlng.lat, lng: e.latlng.lng });     //coordinate for house entry
 }
 
 async function getAddress(lat, lng) {

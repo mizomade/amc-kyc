@@ -2,46 +2,82 @@
   <div class="min-h-screen bg-gray-100 p-6">
           <div class="flex justify-between items-center mb-6">
               <h1 class="text-3xl font-bold text-gray-900">Citizen List</h1>
-              <div class="flex space-x-2 items-center">
+
+              <div class="flex space-x-4 items-center">
                 
-                <!-- Filter Dropdown Buttons -->
-                    <div class="flex space-x-2">
-                      <!-- Age Filter -->
-                      <select
-                      v-model="selectedAge"
-                      class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <!-- 👇 Persons Tab Filters -->
+                <div v-if="activeTab === 'persons'" class="flex space-x-2 items-center">
+                  <!-- Age Filter -->
+                  <select
+                    v-model="selectedAge"
+                    class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Ages</option>
+                    <option value="0-18">0-18</option>
+                    <option value="18-35">18-35</option>
+                    <option value="35-60">35-60</option>
+                    <option value="60 above">60 above</option>
+                  </select>
+
+                  <!-- Occupation Filter -->
+                  <select
+                    v-model="selectedOccupation"
+                    class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Occupations</option>
+                    <option
+                      v-for="occupation in occupations"
+                      :key="occupation.id"
+                      :value="occupation.name"
                     >
-                      <option value="">All Ages</option>
-                      <option value="0-18">0-18</option>
-                      <option value="18-35">18-35</option>
-                      <option value="35-60">35-60</option>
-                      <option value="60 above">60 above</option>
-                    </select>
+                      {{ occupation.name }}
+                    </option>
+                  </select>
 
+                  <!-- Person Search -->
+                  <input
+                    v-model="searchTerm"
+                    type="text"
+                    placeholder="Search name..."
+                    class="border border-gray-300 rounded-md px-3 py-2 text-sm shadow-sm"
+                  />
+                </div>
 
-                      <!-- Occupation Filter -->
-                      <select
-                      v-model="selectedOccupation"
-                      class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                <!--  Houses Tab Filters -->
+                <div v-else-if="activeTab === 'houses'" class="flex space-x-2 items-center">
+                  <select
+                    v-model="houseVeng"
+                    class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Locations</option>
+                    <option
+                      v-for="veng in vengs"
+                      :key="veng.id"
+                      :value="veng.id"
                     >
-                      <option value="">All Occupations</option>
-                      <option value="Business">Business</option>
-                      <option value="Government">Government</option>
-                      <option value="Unemployed">Unemployed</option>
-                    </select>
+                      {{ veng.name }}
+                    </option>
+                  </select>
 
-                    </div>
+                  <select
+                    v-model="houseOwnership"
+                    class="rounded-full border border-gray-300 px-4 py-1 text-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Ownerships</option>
+                    <option value="owned">Owned</option>
+                    <option value="rented">Rented</option>
+                  </select>
 
 
-                <!-- Search Input -->
-                <input
-                  v-model="searchTerm"
-                  type="text"
-                  placeholder="Search name..."
-                  class="border border-gray-300 rounded-md px-3 py-2 text-sm shadow-sm"
-                />
+                  <input
+                    v-model="houseSearchTerm"
+                    type="text"
+                    placeholder="Search house no..."
+                    class="border border-gray-300 rounded-md px-3 py-2 text-sm shadow-sm"
+                  />
+                </div>
 
-                <!-- Add New Entry Button -->
+                <!-- Add New Entry Button (Always Visible) -->
                 <NuxtLink
                   to="/admin/newentry/"
                   class="bg-blue-600 text-white py-2 px-4 rounded-md shadow-md hover:bg-blue-700 transition duration-300"
@@ -50,6 +86,7 @@
                 </NuxtLink>
               </div>
             </div>
+
 
 
 
@@ -69,7 +106,7 @@
       </div>
 
       <div v-if="activeTab === 'persons'">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Persons</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"></h2>
         <div class="overflow-x-auto">
           <table class="min-w-full divide-y divide-gray-200">
             <thead class="bg-gray-50">
@@ -121,24 +158,24 @@
       </div>
 
       <div v-if="activeTab === 'houses'">
-        <h2 class="text-xl font-semibold text-gray-900 mb-4">Houses</h2>
+        <h2 class="text-xl font-semibold text-gray-900 mb-4"></h2>
         <table class="min-w-full divide-y divide-gray-200">
-  <thead class="bg-gray-50">
-    <tr>
-      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">House No</th>
-      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Head of Family</th>
-      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
-      <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ownership</th>
-    </tr>
-  </thead>
-  <tbody class="bg-white divide-y divide-gray-200">
-    <tr v-for="house in houses" :key="house.id" class="hover:bg-blue-50 cursor-pointer transition" @click="router.push(`/admin/house/${house.id}`)">
-      <td class="px-6 py-4 text-sm text-gray-900">{{ house.house_number }} </td>
-      <td class="px-6 py-4 text-sm text-gray-500">{{ house.head_name || '—' }}</td>
-      <td class="px-6 py-4 text-sm text-gray-500">{{ house.veng_name }}</td>
-        <td class="px-6 py-4 text-sm text-gray-500">
-        {{ house.is_owner ? 'Owned' : 'Rented' }}
-        </td>
+            <thead class="bg-gray-50">
+              <tr>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">House No</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Head of Family</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Location</th>
+                <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ownership</th>
+              </tr>
+            </thead>
+              <tbody class="bg-white divide-y divide-gray-200">
+                <tr v-for="house in houses" :key="house.id" class="hover:bg-blue-50 cursor-pointer transition" @click="router.push(`/admin/house/${house.id}`)">
+                  <td class="px-6 py-4 text-sm text-gray-900">{{ house.house_number }} </td>
+                  <td class="px-6 py-4 text-sm text-gray-500">{{ house.head_name || '—' }}</td>
+                  <td class="px-6 py-4 text-sm text-gray-500">{{ house.veng_name }}</td>
+                    <td class="px-6 py-4 text-sm text-gray-500">
+                    {{ house.is_owner ? 'Owned' : 'Rented' }}
+                    </td>
 
     </tr>
   </tbody>
@@ -149,6 +186,7 @@
   </div>
 </template>
 
+
 <script setup>
 import { ref, onMounted, watch } from 'vue'
 import { useNuxtApp } from '#app'
@@ -158,24 +196,37 @@ import { useRouter } from 'vue-router'
 definePageMeta({
   layout: 'admin',
   middleware: 'auth',
-});
-
-const router = useRouter()
-
-const activeTab = ref('persons')
-const persons = ref([])
-const houses = ref([])
-const selectedAge = ref('')
-const selectedOccupation = ref('')
-const searchTerm = ref('')  // new: search input binding
-
-const { $api } = useNuxtApp()
-
-onMounted(async () => {
-  await fetchPersons()
-  await fetchHouses()
 })
 
+const router = useRouter()
+const { $api } = useNuxtApp()
+
+// Tabs
+const activeTab = ref('persons')
+
+// Persons filters
+const persons = ref([])
+const selectedAge = ref('')
+const selectedOccupation = ref('')
+const searchTerm = ref('')
+const occupations = ref([])
+
+// Houses filters
+const houses = ref([])
+const houseOwnership = ref('')
+const houseSearchTerm = ref('')
+const vengs = ref([])         // stores list of locations
+const houseVeng = ref('')  
+
+// Fetch Data on Mount
+onMounted(async () => {
+  await fetchPersons()
+  await fetchOccupations()
+  await fetchHouses()
+    await fetchVengs() 
+})
+
+/* === Persons Fetching === */
 async function fetchPersons() {
   try {
     const params = {}
@@ -190,55 +241,91 @@ async function fetchPersons() {
   }
 }
 
+// Filters Watchers (Persons)
 watch([selectedAge, selectedOccupation], () => {
   fetchPersons()
 })
 
+// Search Watcher with Debounce (Persons)
+const debouncedFetchPersons = debounce(() => {
+  fetchPersons()
+}, 300)
+
 watch(searchTerm, () => {
-  debouncedFetch()
+  debouncedFetchPersons()
 })
 
 
-
-
-
-
-
+/* === Houses Fetching === */
 async function fetchHouses() {
   try {
-    const res = await $api.get('/forentry/houses/')
+    const params = {}
+    if (houseOwnership.value) params.ownership = houseOwnership.value
+    if (houseSearchTerm.value) params.query = houseSearchTerm.value
+    if (houseVeng.value) params.veng_id = houseVeng.value   // location filter
+
+    const res = await $api.get('/forentry/houses/search/', { params })
     houses.value = res.data
   } catch (err) {
-    console.error('Failed to load houses:', err)
+    console.error('Failed to search houses:', err)
+    houses.value = []
   }
 }
 
-// new: debounce search watcher
-const debouncedFetch = debounce((val) => {
-  fetchPersons(val)
-}, 300)
 
-watch(searchTerm, (val) => {
-  debouncedFetch(val)
+async function fetchVengs() {
+  try {
+    const res = await $api.get('/veng/')   // adjust endpoint if needed
+    vengs.value = res.data
+  } catch (err) {
+    console.error('Failed to load locations (vengs):', err)
+  }
+}
+
+watch(houseVeng, () => {
+  fetchHouses()
 })
 
+
+
+// Filters Watchers (Houses)
+watch([houseOwnership], () => {
+  fetchHouses()
+})
+
+// Search Watcher with Debounce (Houses)
+const debouncedFetchHouses = debounce(() => {
+  fetchHouses()
+}, 300)
+
+watch(houseSearchTerm, () => {
+  debouncedFetchHouses()
+})
+
+
+/* === Occupations Fetching === */
+async function fetchOccupations() {
+  try {
+    const res = await $api.get('/occupations/')
+    occupations.value = res.data
+  } catch (err) {
+    console.error('Failed to load occupations:', err)
+  }
+}
+
+
+/* === Delete Person === */
 async function confirmDelete(personId) {
-  if (confirm("Are you sure you want to delete this person?")) {
+  if (confirm('Are you sure you want to delete this person?')) {
     try {
       await $api.delete(`/forentry/delete/${personId}`)
-    
       persons.value = persons.value.filter(p => p.id !== personId)
     } catch (err) {
-      console.error("Failed to delete person:", err)
-
-      alert("Failed to delete person.")
+      console.error('Failed to delete person:', err)
+      alert('Failed to delete person.')
     }
   }
 }
-
-
-
-
 </script>
 
 
