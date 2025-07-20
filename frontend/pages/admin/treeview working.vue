@@ -27,31 +27,20 @@
           </li>
         </ul>
       </div>
-
-      <!-- Family Tree Graph or Intro Info -->
+      <!-- Family Tree Graph -->
       <div class="overflow-x-auto py-4">
         <div class="flex justify-center">
           <VGraphFamily
             v-if="treeData"
             :person-id="treeData.personId"
             :data="treeData"
-            @node-selected="selectNode"
+  @node-selected="selectNode"
           />
           <div
             v-else
-            class="text-center text-gray-600 py-20 px-6 max-w-2xl mx-auto"
+            class="text-center text-gray-500 py-20 w-full"
           >
-            <!-- <h2 class="text-2xl font-semibold text-gray-800 mb-4">Explore Your Family Heritage</h2>
-            <p class="text-gray-700 mb-4">
-              This portal allows you to explore the family trees of citizens across Mizoram.
-              Simply type a person's name above to get started. You can view parents, spouses,
-              children, and even navigate through generations.
-            </p> -->
-            <img
-              src="/images/family-tree-placeholder.png"
-              alt="Family Tree Illustration"
-              class="w-full h-auto mx-auto mt-6 opacity-70"
-            />
+            Search and select a person to load the family tree.
           </div>
         </div>
       </div>
@@ -63,22 +52,7 @@
       >
         <h3 class="text-xl font-semibold text-gray-700 mb-4">Person Details</h3>
         <p class="text-gray-800 mb-1"><strong>Name:</strong> {{ selectedNode.name }}</p>
-
-        <div class="mt-4 flex gap-4">
-          <NuxtLink
-            :to="`/admin/person/${selectedNode.id}`"
-            class="inline-block px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            See Personal Details
-          </NuxtLink>
-
-          <button
-            @click="loadTreeFromSelectedNode"
-            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700"
-          >
-            Load Tree from this Person
-          </button>
-        </div>
+        <p class="text-gray-800 mb-1"><strong>ID:</strong> {{ selectedNode.id }}</p>
       </div>
     </div>
   </div>
@@ -87,12 +61,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useNuxtApp } from '#app'
-import { useRoute, useRouter } from 'vue-router'
 import FamilyTreeGraph from '~/components/VGraphFamily.vue'
-
-
-const route = useRoute();
-const userId = route.query.id || '';
 
 definePageMeta({
   layout: 'admin',
@@ -100,6 +69,7 @@ definePageMeta({
 })
 
 const { $api } = useNuxtApp()
+
 const searchQuery = ref('')
 const suggestions = ref([])
 const selectedNode = ref(null)
@@ -137,29 +107,8 @@ const selectSuggestion = async (person) => {
 }
 
 const selectNode = (node) => {
+  console.log('Selected node:', node)
   if (node.isUnion) return
   selectedNode.value = node
 }
-
-const loadTreeFromSelectedNode = async () => {
-  if (!selectedNode.value?.id) return
-  try {
-    const response = await $api.get(`/family-tree-v3/tree/${selectedNode.value.id}`)
-    treeData.value = response.data
-    selectedNode.value = null
-  } catch (error) {
-    console.error('Error loading tree from selected node:', error)
-  }
-}
-
-onMounted(async () => {
-  if (userId) {
-    try {
-      const response = await $api.get(`/family-tree-v3/tree/${userId}`)
-      treeData.value = response.data
-    } catch (error) {
-      // console.error('Error fetching initial tree data:', error)
-    }
-  }
-})  
 </script>
