@@ -13,7 +13,7 @@ def list_personal_occupations(request):
     """
     Returns a list of all personal occupations.
     """
-    occupations = Occupation.objects.all()
+    occupations = Occupation.objects.all().order_by('name')
     return occupations
 
 

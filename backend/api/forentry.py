@@ -502,7 +502,7 @@ def search_house(request, search: str = None):
     ]
 
 
-#House enna tur citizenlist ami
+#House  list enna tur citizenlist ami
 @router.get("/houses/", response=list[HouseOut])
 def list_houses(request):
     houses = House.objects.all()
@@ -524,6 +524,42 @@ def list_houses(request):
         })
 
     return results
+
+#house search na tho search bar with filtering
+@router.get("/houses/search/", response=list[HouseOut])
+def search_houses(request, query: str = None, ownership: str = None, veng_id: int = None):
+    houses = House.objects.all()
+
+    if query:
+        houses = houses.filter(house_number__icontains=query)
+
+    if ownership:
+        if ownership == "owned":
+            houses = houses.filter(is_owner=True)
+        elif ownership == "rented":
+            houses = houses.filter(is_owner=False)
+
+    if veng_id:
+        houses = houses.filter(veng_id=veng_id)
+
+    results = []
+    for house in houses:
+        first_member = Person.objects.filter(house=house).first()
+        head_name = (
+            f"{first_member.first_name} {first_member.hnam_hming or ''}".strip()
+            if first_member else None
+        )
+
+        results.append({
+            "id": house.id,
+            "house_number": house.house_number,
+            "veng_name": house.veng.name if house.veng else None,
+            "is_owner": house.is_owner,
+            "head_name": head_name,
+        })
+
+    return results
+
 
 
 @router.delete("/delete/{person_id}", summary="Delete a person")

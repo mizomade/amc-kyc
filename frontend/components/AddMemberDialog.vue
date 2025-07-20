@@ -1,5 +1,5 @@
 <template>
-  <div class="fixed z-50 inset-0 overflow-y-auto bg-gray-900 bg-opacity-50">
+  <div class="fixed z-50 inset-0 overflow-y-auto bg-transparent">
     <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
       <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
 
@@ -99,7 +99,7 @@
                               v-model="fatherSearchText"
                               @input="searchFather"
                               placeholder="Search Father..."
-                              class="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                              class="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             />
                             <button
                               @click="showAddFatherModal = true"
@@ -134,7 +134,7 @@
                             v-model="motherSearchText"
                             @input="searchMother"
                             placeholder="Search Mother..."
-                            class="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                            class="flex-1 mt-1 block px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                           />
                           <button
                             @click="showAddMotherModal = true"
@@ -177,13 +177,17 @@
                   <!-- Denomination Dropdown -->
                   <div>
                     <label class="block text-sm font-medium text-gray-700">Denomination</label>
-                    <select v-model="memberData.denomination_id"
-                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm">
+                    <select
+                      v-model="memberData.denomination_id"
+                      :disabled="denominations.length === 0"
+                      class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm"
+                    >
                       <option disabled value="">Select Denomination</option>
                       <option v-for="denomination in denominations" :key="denomination.id" :value="denomination.id">
                         {{ denomination.name }}
                       </option>
                     </select>
+
                   </div>
                   <div>
                     <label for="rent_start_date" class="block text-sm font-medium text-gray-700">Rent Start Date</label>
@@ -210,7 +214,7 @@
                     type="file"
                     accept="image/*"
                     @change="handlePhotoUpload"
-                    class="mt-1 block w-full text-sm text-gray-700 border border-gray-300 rounded-md shadow-sm"
+                    class="mt-1 block w-full px-3 py-2 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
 
@@ -277,6 +281,9 @@ import { usePersonStore } from '@/stores/person'
 const { $api } = useNuxtApp()
 import { useHouseStore } from '@/stores/house'
 import AddParentModal from './AddParentModal.vue'
+import { watch } from 'vue'
+
+
 const emit = defineEmits(['close'])
 const showAddFatherModal = ref(false)
 const personStore = usePersonStore()
@@ -323,10 +330,28 @@ const fetchReligions = async () => {
   religions.value = response.data
 }
 
-const fetchDenominations = async () => {
-  const response = await $api.get('/denomination/')
+const fetchDenominations = async (religionId) => {
+  if (!religionId) {
+    denominations.value = []
+    memberData.value.denomination_id = null
+    return
+  }
+
+  const response = await $api.get(`/denomination/?religion_id=${religionId}`)
   denominations.value = response.data
+
+  if (denominations.value.length === 0) {
+    memberData.value.denomination_id = null  // Clear denomination if none exist
+  }
 }
+
+
+
+watch(() => memberData.value.religion_id, (newReligionId) => {
+  fetchDenominations(newReligionId)
+})
+
+
 
 
 const searchFather = async () => {
