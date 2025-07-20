@@ -87,6 +87,18 @@
                 <input type="number" step="any" id="longitude" v-model="houseData.longitude"
                   class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm" />
               </div>
+                    <div>
+                      <button
+                        type="button"
+                        @click="showMapModal = true"
+                        class="mt-2 w-full py-2 px-4 bg-green-600 text-white rounded-md hover:bg-green-700 transition"
+                      >
+                        Pick from Map
+                      </button>
+                    </div>
+
+
+
               <div v-if="houseData.is_tenant">
                 <!-- Parent House Search -->
                       <div>
@@ -129,40 +141,40 @@
 
               </div>
                  <!-- Is Owner -->
-<div class="flex items-center">
-  <input
-    type="checkbox"
-    id="is_owner"
-    :checked="houseData.is_owner"
-    @change="toggleOwner"
-    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-  />
-  <label for="is_owner" class="ml-2 block text-sm text-gray-900">Is Owner</label>
-</div>
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="is_owner"
+                          :checked="houseData.is_owner"
+                          @change="toggleOwner"
+                          class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label for="is_owner" class="ml-2 block text-sm text-gray-900">Is Owner</label>
+                      </div>
 
-<!-- Have Tenant -->
-<div class="flex items-center">
-  <input
-    type="checkbox"
-    id="have_tenant"
-    :checked="houseData.have_tenant"
-    @change="toggleHaveTenant"
-    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-  />
-  <label for="have_tenant" class="ml-2 block text-sm text-gray-900">Have Tenant</label>
-</div>
+                      <!-- Have Tenant -->
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="have_tenant"
+                          :checked="houseData.have_tenant"
+                          @change="toggleHaveTenant"
+                          class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label for="have_tenant" class="ml-2 block text-sm text-gray-900">Have Tenant</label>
+                      </div>
 
-<!-- Is Tenant -->
-<div class="flex items-center">
-  <input
-    type="checkbox"
-    id="is_tenant"
-    :checked="houseData.is_tenant"
-    @change="toggleTenant"
-    class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
-  />
-  <label for="is_tenant" class="ml-2 block text-sm text-gray-900">Is Tenant</label>
-</div>
+                      <!-- Is Tenant -->
+                      <div class="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="is_tenant"
+                          :checked="houseData.is_tenant"
+                          @change="toggleTenant"
+                          class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <label for="is_tenant" class="ml-2 block text-sm text-gray-900">Is Tenant</label>
+                      </div>
 
 
             </div>
@@ -173,6 +185,15 @@
               </button>
             </div>
           </form>
+          <MapModal
+                :show="showMapModal"
+                :latitude="houseData.latitude"
+                :longitude="houseData.longitude"
+                :house-number="houseData.house_number"
+                @close="showMapModal = false"
+                @selected="updateCoordinates"
+              />
+
         </div>
 
             <div v-if="activeTab === 'members'">
@@ -213,7 +234,10 @@ import { useHouseStore } from '@/stores/house';
 import { ref } from 'vue';
 import { usePersonStore } from '@/stores/person'
 import { useRouter } from 'vue-router';
+import MapModal from '~/components/MapModal.vue';
+
 const router = useRouter();
+const showMapModal = ref(false);
 const vengs = ref([]);
 const houses = ref([]);
 const activeTab = ref('house');          
@@ -254,11 +278,12 @@ const submitHouseForm = async () => {
     houseStore.house_id = response.data.id;
 
     console.log('House created successfully, ID:', response.data.id);
-
+    alert('House created successfully!') 
     await fetchMembers();  // <-- fetch members after saving house
 
   } catch (error) {
     console.error('Failed to create house:', error);
+    alert('Failed to created House!') 
   }
 };
 
@@ -353,6 +378,14 @@ watch(activeTab, (newTab) => {
     fetchMembers();
   }
 });
+
+function updateCoordinates(coords) {
+  houseData.value.latitude = coords.lat;
+  houseData.value.longitude = coords.lng;
+}
+
+
+
 onMounted(() => {
   fetchVengs();
   fetchHouseOptions();
