@@ -11,6 +11,7 @@ export default defineNuxtConfig({
   modules: ['@pinia/nuxt', '@nuxtjs/tailwindcss', '@nuxt/ui', '@nuxt/icon', 'nuxt-echarts', '@nuxtjs/leaflet'],
   css: [
     '~/assets/css/main.css',
+    "v-network-graph/lib/style.css"
   ],
   build: {
     transpile: ['vue-quill-editor'],
