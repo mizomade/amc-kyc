@@ -17,6 +17,7 @@
                     <option value="18-35">18-35</option>
                     <option value="35-60">35-60</option>
                     <option value="60 above">60 above</option>
+                    <option value="new-voters">New Voters</option>
                   </select>
 
                   <!-- Occupation Filter -->
@@ -230,9 +231,18 @@ onMounted(async () => {
 async function fetchPersons() {
   try {
     const params = {}
+
     if (searchTerm.value) params.search = searchTerm.value
-    if (selectedAge.value) params.age_group = selectedAge.value
+
     if (selectedOccupation.value) params.occupation = selectedOccupation.value
+
+    if (selectedAge.value) {
+      if (selectedAge.value === 'new-voters') {
+        params.new_voters = true
+      } else {
+        params.age_group = selectedAge.value
+      }
+    }
 
     const res = await $api.get('/forentry/search/', { params })
     persons.value = res.data.reverse()
@@ -240,6 +250,7 @@ async function fetchPersons() {
     console.error('Failed to load persons:', err)
   }
 }
+
 
 // Filters Watchers (Persons)
 watch([selectedAge, selectedOccupation], () => {

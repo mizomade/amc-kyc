@@ -371,7 +371,20 @@ def calculate_age(dob):
     today = date.today()
     return today.year - dob.year - ((today.month, today.day) < (dob.month, dob.day))
 
+def dob_range_for_age(min_age, max_age=None):
+    today = date.today()
 
+    # Max DOB is the youngest possible (e.g., 18 years ago)
+    max_dob = date(today.year - min_age, today.month, today.day)
+
+    # Min DOB is the oldest possible (e.g., 35 years ago)
+    if max_age is not None:
+        # Add 1 day so we don’t include someone who just turned (max_age + 1)
+        min_dob = date(today.year - max_age - 1, today.month, today.day + 1)
+    else:
+        min_dob = None
+
+    return (min_dob, max_dob)
 
 
 
@@ -384,6 +397,7 @@ def search_person(
     occupation: str = None,   
     age_group: str = None,    
     id: int = None,
+    new_voters: bool = False,
 ):
     queryset = Person.objects.select_related("house", "father", "mother").prefetch_related("occupations__occupation").all()
 
@@ -402,22 +416,35 @@ def search_person(
         queryset = queryset.filter(occupations__occupation__name__iexact=occupation)
 
     if age_group:
-        from datetime import date, timedelta
+        if age_group == "18":
+            # Born in the year they turn 18
+            this_year = date.today().year
+            dob_start = date(this_year - 18, 1, 1)
+            dob_end = date(this_year - 18, 12, 31)
+            queryset = queryset.filter(dob__range=(dob_start, dob_end))
+        else:
+            age_mapping = {
+                "0-18": (0, 18),
+                "18-35": (18, 35),
+                "35-60": (35, 60),
+                "60 above": (60, None),
+            }
 
-        today = date.today()
-        age_ranges = {
-            "0-18": (today - timedelta(days=18*365), today),
-            "18-35": (today - timedelta(days=35*365), today - timedelta(days=18*365)),
-            "35-60": (today - timedelta(days=60*365), today - timedelta(days=35*365)),
-            "60 above": (None, today - timedelta(days=60*365)),
-        }
+            if age_group in age_mapping:
+                min_age, max_age = age_mapping[age_group]
+                dob_start, dob_end = dob_range_for_age(min_age, max_age)
 
-        min_date, max_date = age_ranges.get(age_group, (None, None))
+                if dob_start and dob_end:
+                    queryset = queryset.filter(dob__range=(dob_start, dob_end))
+                elif dob_end:
+                    queryset = queryset.filter(dob__lte=dob_end)
+    if new_voters:
+        # People turning 18 this year
+        this_year = date.today().year
+        dob_start = date(this_year - 18, 1, 1)
+        dob_end = date(this_year - 18, 12, 31)
+        queryset = queryset.filter(dob__range=(dob_start, dob_end))
 
-        if min_date and max_date:
-            queryset = queryset.filter(dob__range=(min_date, max_date))
-        elif max_date:
-            queryset = queryset.filter(dob__lte=max_date)
 
     if id:
         queryset = queryset.filter(id=id)
